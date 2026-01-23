@@ -1,5 +1,5 @@
 ' ------------------------------
-' SUNCOå¹´æ¬¡æ›´æ–°å‡¦ç†ã‚¹ã‚¯ãƒªãƒ—ãƒˆ
+' SUNCO”NŸXVˆ—ƒXƒNƒŠƒvƒg
 ' ------------------------------
 Option Explicit
 '
@@ -27,7 +27,7 @@ Dim backupPath
 Dim timestamp
 Dim backupFile
 
-' ----- DBãƒ»ãƒ†ãƒ¼ãƒ–ãƒ«å®šç¾© -----
+' ----- DBEƒe[ƒuƒ‹’è‹` -----
 Dim srcDbName
 Dim tgtDbName
 Dim TBK
@@ -41,57 +41,60 @@ Dim TBKU1_TEMP
 Dim TBKU2
 Dim TBKU2_TEMP
 Dim MG
+Dim MS
+Dim MK
+Dim MH
 Dim keyFieldName
 Dim DbPassword
 Dim baseDate
 Dim yearOffset
-Dim insertCountTBK
-Dim insertCountTBKTR
-Dim insertCountTBKTR2
-Dim insertCountTBKU1
-Dim insertCountTBKU2
 Dim recordsAffected
+Dim insertCount
+Dim DBCopyF
 Dim logFile
-' ----- ãƒ‘ã‚¹ -----
+' ----- ƒpƒX -----
 Dim srcDbPath
 Dim tgtDbPath
 
 ' -------------------------
-' è¨­å®šå€¤
+' İ’è’l
 ' -------------------------
 listDBNAME = "List"
-srcDbName= "ã‚µãƒ³ã‚³ãƒ¼ã‚¤ãƒ³ãƒ€ã‚¹ãƒˆãƒªãƒ¼"
-tgtDbName= "å…¨ãƒ‡ãƒ¼ã‚¿_ã‚µãƒ³ã‚³ãƒ¼ã‚¤ãƒ³ãƒ€ã‚¹ãƒˆãƒªãƒ¼"
-TBDB = "DAAA070_ä¼æ¥­åãƒã‚¹ã‚¿"
-TBK = "DBDA010_å€Ÿå…¥é‡‘"
-TBK_TEMP = "DBDA010_å€Ÿå…¥é‡‘_TEMP"
-TBKTR = "DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR"
-TBKTR_TEMP = "DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR_TEMP"
-TBKTR2 = "DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR2"
-TBKTR2_TEMP = "DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR2_TEMP"
-TBKU1 = "DBDA010_å€Ÿå…¥é‡‘å†…å…¥1"
-TBKU1_TEMP = "DBDA010_å€Ÿå…¥é‡‘å†…å…¥1_TEMP"
-TBKU2 = "DBDA010_å€Ÿå…¥é‡‘å†…å…¥2"
-TBKU2_TEMP = "DBDA010_å€Ÿå…¥é‡‘å†…å…¥2_TEMP"
-MG = "DAAA040_éŠ€è¡Œãƒã‚¹ã‚¿"
-keyFieldName = "å€Ÿå…¥ç•ªå·"
+srcDbName= "ƒTƒ“ƒR[ƒCƒ“ƒ_ƒXƒgƒŠ["
+tgtDbName= "‘Sƒf[ƒ^_ƒTƒ“ƒR[ƒCƒ“ƒ_ƒXƒgƒŠ["
+TBDB = "DAAA070_Šé‹Æ–¼ƒ}ƒXƒ^"
+TBK = "DBDA010_Ø“ü‹à"
+TBK_TEMP = "DBDA010_Ø“ü‹à_TEMP"
+TBKTR = "DBDA010_Ø“ü‹à–¾×TR"
+TBKTR_TEMP = "DBDA010_Ø“ü‹à–¾×TR_TEMP"
+TBKTR2 = "DBDA010_Ø“ü‹à–¾×TR2"
+TBKTR2_TEMP = "DBDA010_Ø“ü‹à–¾×TR2_TEMP"
+TBKU1 = "DBDA010_Ø“ü‹à“à“ü1"
+TBKU1_TEMP = "DBDA010_Ø“ü‹à“à“ü1_TEMP"
+TBKU2 = "DBDA010_Ø“ü‹à“à“ü2"
+TBKU2_TEMP = "DBDA010_Ø“ü‹à“à“ü2_TEMP"
+MG = "DAAA040_‹âsƒ}ƒXƒ^"
+MS = "DACA010_j“úƒ}ƒXƒ^"
+MK = "DABA010_Š¨’è‰È–Úƒ}ƒXƒ^"
+MH = "DABA020_•â•‰È–Úƒ}ƒXƒ^"
+keyFieldName = "Ø“ü”Ô†"
 DbPassword = "inkinhkheshh2IHPDKPI"
 adSchemaTables = 20
 
 ' -------------------------
-' åŒä¸€ãƒ•ã‚©ãƒ«ãƒ€ã®ãƒ‘ã‚¹å–å¾—
+' “¯ˆêƒtƒHƒ‹ƒ_‚ÌƒpƒXæ“¾
 ' -------------------------
 Set fso = CreateObject("Scripting.FileSystemObject")
 basePath = fso.GetParentFolderName(WScript.ScriptFullName)
 
-Set logFile = fso.OpenTextFile(basePath & "\å¹´æ¬¡æ›´æ–°_log.txt", 8, True)
+Set logFile = fso.OpenTextFile(basePath & "\”NŸXV_log.txt", 8, True)
 
 srcDbPath = basePath & "\" & srcDbName & ".mdb"
 tgtDbPath = basePath & "\" & tgtDbName & ".mdb"
 listDbPath = basePath & "\" & listDBNAME & ".mdb"
 
 If not fso.FileExists(srcDbPath) then
-  WScript.Echo "å…ƒDBãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: " & srcDbPath
+  WScript.Echo "Œ³DB‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: " & srcDbPath
   WScript.Quit
 end if
 
@@ -101,13 +104,11 @@ Else
     yearOffset = 5
 End If
 baseDate = "#" & (Year(Date) - yearOffset) & "/03/01#"
-If MsgBox("åŸºæº–æ—¥ï¼š" & baseDate & " ã‚ˆã‚Šå‰ã®ãƒ‡ãƒ¼ã‚¿ã‚’ç§»è¡Œ" & vbCrLf & "å®Œæ¸ˆãƒ‡ãƒ¼ã‚¿ã¯ " & tgtDbPath & " ã«ç§»å‹•ã—ã¾ã™ã€‚", vbokcancel, "å¹´æ¬¡æ›´æ–°") = vbCancel Then
-    WScript.Quit
-End If
-logFile.WriteLine "åŸºæº–æ—¥ï¼š" & baseDate & " ã‚ˆã‚Šå‰ã®ãƒ‡ãƒ¼ã‚¿ã‚’ç§»è¡Œ Start:" & Now()
+logFile.WriteLine "Šî€“úF" & baseDate & " ‚æ‚è‘O‚Ìƒf[ƒ^‚ğˆÚs Start:" & Now()
+MsgBox "Šî€“úF" & baseDate & " ‚æ‚è‘O‚Ìƒf[ƒ^‚ğˆÚs" & vbCrLf & "Š®Ïƒf[ƒ^‚Í " & tgtDbPath & " ‚ÉˆÚ“®‚µ‚Ü‚·B", vbOKOnly, "”NŸXV"
 
 ' -------------------------
-' ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ä½œæˆ
+' ƒoƒbƒNƒAƒbƒvì¬
 ' -------------------------
 backupPath = basePath & "\backup"
 If Not fso.FolderExists(backupPath) Then
@@ -128,8 +129,9 @@ If fso.FileExists(listDbPath) then
 end if
 
 ' -------------------------
-' DBã‚³ãƒ”ãƒ¼ï¼ˆtgtDbãŒå­˜åœ¨ã—ãªã„å ´åˆï¼‰
+' DBƒRƒs[itgtDb‚ª‘¶İ‚µ‚È‚¢ê‡j
 ' -------------------------
+DBCopyF = False
 If not fso.FileExists(tgtDbPath) then
   fso.CopyFile srcDbPath, tgtDbPath
   Set connTgt = CreateObject("ADODB.Connection")
@@ -139,29 +141,30 @@ If not fso.FileExists(tgtDbPath) then
     "Jet OLEDB:Database Password=" & DbPassword & ";"
       sql = ""
       sql = sql & "UPDATE [" & TBDB & "] "
-      sql = sql & "SET ä¼æ¥­åKey = '" & tgtDbName & "', "
-      sql = sql & "ä¼æ¥­å = '" & tgtDbName & "', "
-      sql = sql & "DBå = '" & tgtDbName & ".mdb', "
-      sql = sql & "æœ€æ–°å‡¦ç†æ—¥ = #" & FormatDateTime(Now(), vbGeneralDate) & "#, "
-      sql = sql & "ä½œæˆæ—¥ = #" & FormatDateTime(Now(), vbGeneralDate) & "#, "
-      sql = sql & "å¾©å…ƒæ—¥ = NULL, "
-      sql = sql & "å‰Šé™¤æ—¥ = NULL, "
-      sql = sql & "ç«¯æœ«ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿å = ''"
+      sql = sql & "SET Šé‹Æ–¼Key = '" & tgtDbName & "', "
+      sql = sql & "Šé‹Æ–¼ = '" & tgtDbName & "', "
+      sql = sql & "DB–¼ = '" & tgtDbName & ".mdb', "
+      sql = sql & "ÅVˆ—“ú = #" & FormatDateTime(Now(), vbGeneralDate) & "#, "
+      sql = sql & "ì¬“ú = #" & FormatDateTime(Now(), vbGeneralDate) & "#, "
+      sql = sql & "•œŒ³“ú = NULL, "
+      sql = sql & "íœ“ú = NULL, "
+      sql = sql & "’[––ƒRƒ“ƒsƒ…[ƒ^–¼ = ''"
       connTgt.Execute sql
   connTgt.Close
-  logFile.WriteLine "DBã‚’ã‚³ãƒ”ãƒ¼ã—ã¾ã—ãŸ: " & tgtDbPath
+  logFile.WriteLine "DB‚ğƒRƒs[‚µ‚Ü‚µ‚½: " & tgtDbPath
+  DBCopyF = True
 end if
 
 ' -------------------------
-' list.mdbæ“ä½œ
+' list.mdb‘€ì
 ' -------------------------
 Set connList = CreateObject("ADODB.Connection")
 connList.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & listDbPath & ";"
 
-Set rs = connList.Execute("SELECT * FROM [" & TBDB & "] WHERE [ä¼æ¥­åKey] = '" & srcDbName & "'")
+Set rs = connList.Execute("SELECT * FROM [" & TBDB & "] WHERE [Šé‹Æ–¼Key] = '" & srcDbName & "'")
 If not rs.EOF then
   rs.MoveFirst
-  Set rs2 = connList.Execute("SELECT * FROM [" & TBDB & "] WHERE [ä¼æ¥­åKey] = '" & tgtDbName & "'")
+  Set rs2 = connList.Execute("SELECT * FROM [" & TBDB & "] WHERE [Šé‹Æ–¼Key] = '" & tgtDbName & "'")
   If rs2.EOF then
     ' INSERT
     fieldNames = ""
@@ -169,15 +172,15 @@ If not rs.EOF then
     for i = 0 to rs.Fields.Count - 1
       fieldName = rs.Fields(i).Name
       val = rs.Fields(i).Value
-      if fieldName = "ä¼æ¥­åKey" then val = tgtDbName
-      if fieldName = "ä¼æ¥­å" then val = tgtDbName
-      if fieldName = "DBå" then val = tgtDbName & ".mdb"
-      if fieldName = "æœ€æ–°å‡¦ç†æ—¥" then val = FormatDateTime(Now(), vbGeneralDate)
-      if fieldName = "ä½œæˆæ—¥" then val = FormatDateTime(Now(), vbGeneralDate)
-      if fieldName = "ä¿å­˜æ—¥" then val = Null
-      if fieldName = "å¾©å…ƒæ—¥" then val = Null
-      if fieldName = "å‰Šé™¤æ—¥" then val = Null
-      if fieldName = "ç«¯æœ«ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿å" then val = ""
+      if fieldName = "Šé‹Æ–¼Key" then val = tgtDbName
+      if fieldName = "Šé‹Æ–¼" then val = tgtDbName
+      if fieldName = "DB–¼" then val = tgtDbName & ".mdb"
+      if fieldName = "ÅVˆ—“ú" then val = FormatDateTime(Now(), vbGeneralDate)
+      if fieldName = "ì¬“ú" then val = FormatDateTime(Now(), vbGeneralDate)
+      if fieldName = "•Û‘¶“ú" then val = Null
+      if fieldName = "•œŒ³“ú" then val = Null
+      if fieldName = "íœ“ú" then val = Null
+      if fieldName = "’[––ƒRƒ“ƒsƒ…[ƒ^–¼" then val = ""
       fieldNames = fieldNames & "[" & fieldName & "]"
       if IsNull(val) then
         values = values & "NULL"
@@ -195,22 +198,22 @@ If not rs.EOF then
     next
     sql = "INSERT INTO [" & TBDB & "] (" & fieldNames & ") VALUES (" & values & ")"
     connList.Execute sql
-    logFile.WriteLine "list.mdbã«æ–°è¦è¿½åŠ ã—ã¾ã—ãŸ: " & tgtDbName
+    logFile.WriteLine "list.mdb‚ÉV‹K’Ç‰Á‚µ‚Ü‚µ‚½: " & tgtDbName
   else
     ' UPDATE
     sql = "UPDATE [" & TBDB & "] SET "
     for i = 0 to rs.Fields.Count - 1
       fieldName = rs.Fields(i).Name
       val = rs.Fields(i).Value
-      if fieldName = "ä¼æ¥­åKey" then val = tgtDbName
-      if fieldName = "ä¼æ¥­å" then val = tgtDbName
-      if fieldName = "DBå" then val = tgtDbName & ".mdb"
-      if fieldName = "æœ€æ–°å‡¦ç†æ—¥" then val = FormatDateTime(Date(), vbShortDate)
-      if fieldName = "ä½œæˆæ—¥" then val = FormatDateTime(Date(), vbShortDate)
-      if fieldName = "ä¿å­˜æ—¥" then val = Null
-      if fieldName = "å¾©å…ƒæ—¥" then val = Null
-      if fieldName = "å‰Šé™¤æ—¥" then val = Null
-      if fieldName = "ç«¯æœ«ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿å" then val = ""
+      if fieldName = "Šé‹Æ–¼Key" then val = tgtDbName
+      if fieldName = "Šé‹Æ–¼" then val = tgtDbName
+      if fieldName = "DB–¼" then val = tgtDbName & ".mdb"
+      if fieldName = "ÅVˆ—“ú" then val = FormatDateTime(Date(), vbShortDate)
+      if fieldName = "ì¬“ú" then val = FormatDateTime(Date(), vbShortDate)
+      if fieldName = "•Û‘¶“ú" then val = Null
+      if fieldName = "•œŒ³“ú" then val = Null
+      if fieldName = "íœ“ú" then val = Null
+      if fieldName = "’[––ƒRƒ“ƒsƒ…[ƒ^–¼" then val = ""
       sql = sql & "[" & fieldName & "] = "
       if IsNull(val) then
         sql = sql & "NULL"
@@ -223,9 +226,9 @@ If not rs.EOF then
       end if
       if i < rs.Fields.Count - 1 then sql = sql & ", "
     next
-    sql = sql & " WHERE [ä¼æ¥­åKey] = '" & tgtDbName & "'"
+    sql = sql & " WHERE [Šé‹Æ–¼Key] = '" & tgtDbName & "'"
     connList.Execute sql
-    logFile.WriteLine "List.mdbã‚’æ›´æ–°ã—ã¾ã—ãŸ: " & tgtDbName
+    logFile.WriteLine "List.mdb‚ğXV‚µ‚Ü‚µ‚½: " & tgtDbName
   end if
   rs2.Close
   Set rs2 = Nothing
@@ -236,7 +239,7 @@ connList.Close
 Set connList = Nothing
 
 ' -------------------------
-' DBæ¥ç¶š
+' DBÚ‘±
 ' -------------------------
 Set connSrc = CreateObject("ADODB.Connection")
 connSrc.Open _
@@ -251,206 +254,360 @@ connTgt.Open _
  "Jet OLEDB:Database Password=" & DbPassword & ";"
 
 ' -------------------------
-' TEMPãƒ†ãƒ¼ãƒ–ãƒ«ä½œæˆï¼ˆå­˜åœ¨ã—ãªã„å ´åˆï¼‰
+' TEMPƒe[ƒuƒ‹ì¬i‘¶İ‚µ‚È‚¢ê‡j
 ' -------------------------
 Set rsSchema = connTgt.OpenSchema(adSchemaTables)
 rsSchema.MoveFirst
 
-' DBDA010_å€Ÿå…¥é‡‘_TEMP
-' ç©ºã® TEMP ãƒ†ãƒ¼ãƒ–ãƒ«ã‚’ä½œæˆã™ã‚‹ WHERE 1=0
+' DBDA010_Ø“ü‹à_TEMP
+' ‹ó‚Ì TEMP ƒe[ƒuƒ‹‚ğì¬‚·‚é WHERE 1=0
 rsSchema.Find "TABLE_NAME = '" & TBK_TEMP & "'"
 If rsSchema.EOF then
   connTgt.Execute "SELECT * INTO [" & TBK_TEMP & "] FROM [" & TBK & "] WHERE 1=0"
-  logFile.WriteLine "TEMPãƒ†ãƒ¼ãƒ–ãƒ« [" & TBK_TEMP & "] ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"
+  logFile.WriteLine "TEMPƒe[ƒuƒ‹ [" & TBK_TEMP & "] ‚ğì¬‚µ‚Ü‚µ‚½B"
 end if
 rsSchema.MoveFirst
 
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR_TEMP
+' DBDA010_Ø“ü‹à–¾×TR_TEMP
 rsSchema.Find "TABLE_NAME = '" & TBKTR_TEMP & "'"
 If rsSchema.EOF then
   connTgt.Execute "SELECT * INTO [" & TBKTR_TEMP & "] FROM [" & TBKTR & "] WHERE 1=0"
-  logFile.WriteLine "TEMPãƒ†ãƒ¼ãƒ–ãƒ« [" & TBKTR_TEMP & "] ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"
+  logFile.WriteLine "TEMPƒe[ƒuƒ‹ [" & TBKTR_TEMP & "] ‚ğì¬‚µ‚Ü‚µ‚½B"
 end if
 rsSchema.MoveFirst
 
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR2_TEMP
+' DBDA010_Ø“ü‹à–¾×TR2_TEMP
 rsSchema.Find "TABLE_NAME = '" & TBKTR2_TEMP & "'"
 If rsSchema.EOF then
   connTgt.Execute "SELECT * INTO [" & TBKTR2_TEMP & "] FROM [" & TBKTR2 & "] WHERE 1=0"
-  logFile.WriteLine "TEMPãƒ†ãƒ¼ãƒ–ãƒ« [" & TBKTR2_TEMP & "] ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"
+  logFile.WriteLine "TEMPƒe[ƒuƒ‹ [" & TBKTR2_TEMP & "] ‚ğì¬‚µ‚Ü‚µ‚½B"
 end if
 rsSchema.MoveFirst
 
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥1_TEMP
+' DBDA010_Ø“ü‹à“à“ü1_TEMP
 rsSchema.Find "TABLE_NAME = '" & TBKU1_TEMP & "'"
 If rsSchema.EOF then
   connTgt.Execute "SELECT * INTO [" & TBKU1_TEMP & "] FROM [" & TBKU1 & "] WHERE 1=0"
-  logFile.WriteLine "TEMPãƒ†ãƒ¼ãƒ–ãƒ« [" & TBKU1_TEMP & "] ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"
+  logFile.WriteLine "TEMPƒe[ƒuƒ‹ [" & TBKU1_TEMP & "] ‚ğì¬‚µ‚Ü‚µ‚½B"
 end if
 rsSchema.MoveFirst
 
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥2_TEMP
+' DBDA010_Ø“ü‹à“à“ü2_TEMP
 rsSchema.Find "TABLE_NAME = '" & TBKU2_TEMP & "'"
 If rsSchema.EOF then
   connTgt.Execute "SELECT * INTO [" & TBKU2_TEMP & "] FROM [" & TBKU2 & "] WHERE 1=0"
-  logFile.WriteLine "TEMPãƒ†ãƒ¼ãƒ–ãƒ« [" & TBKU2_TEMP & "] ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"
+  logFile.WriteLine "TEMPƒe[ƒuƒ‹ [" & TBKU2_TEMP & "] ‚ğì¬‚µ‚Ü‚µ‚½B"
 end if
 
 rsSchema.Close
 Set rsSchema = Nothing
 
 ' -------------------------
-' DELETE(å…¨ãƒ‡ãƒ¼ã‚¿DB)
+' DELETE(‘Sƒf[ƒ^DB)
 ' -------------------------
-' DBDA010_å€Ÿå…¥é‡‘_TEMP
-sql = ""
-sql = sql & "DELETE * FROM [" & TBK_TEMP & "] "
-connTgt.Execute sql
-
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR_TEMP
-sql = ""
-sql = sql & "DELETE * FROM [" & TBKTR_TEMP & "] "
-connTgt.Execute sql
-
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR2_TEMP
-sql = ""
-sql = sql & "DELETE * FROM [" & TBKTR2_TEMP & "] "
-connTgt.Execute sql
-
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥1_TEMP
-sql = ""
-sql = sql & "DELETE * FROM [" & TBKU1_TEMP & "] "
-connTgt.Execute sql
-
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥2_TEMP
-sql = ""
-sql = sql & "DELETE * FROM [" & TBKU2_TEMP & "] "
-connTgt.Execute sql
-
-' DBDA010_éŠ€è¡Œãƒã‚¹ã‚¿
-sql = ""
-sql = sql & "DELETE * FROM [" & MG & "] "
-connTgt.Execute sql
-
-' -------------------------
-' INSERTï¼ˆå·®åˆ†è¿½åŠ ã‚’å…¨ãƒ‡ãƒ¼ã‚¿.TEMPãƒ†ãƒ¼ãƒ–ãƒ«ã«è¿½åŠ ï¼‰
-' -------------------------
-' DBDA010_å€Ÿå…¥é‡‘
-Call InsertByRecordset(connSrc, connTgt, TBK, TBK_TEMP, logFile)
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR
-Call InsertByRecordset(connSrc, connTgt, TBKTR, TBKTR_TEMP, logFile)
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR2
-Call InsertByRecordset(connSrc, connTgt, TBKTR2, TBKTR2_TEMP, logFile)
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥1
-Call InsertByRecordset(connSrc, connTgt, TBKU1, TBKU1_TEMP, logFile)
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥2
-Call InsertByRecordset(connSrc, connTgt, TBKU2, TBKU2_TEMP, logFile)
-
-' -------------------------
-' INSERTï¼ˆTEMPãƒ†ãƒ¼ãƒ–ãƒ«ã‹ã‚‰è¿½åŠ ï¼‰
-' -------------------------
-' DBDA010_å€Ÿå…¥é‡‘
-Call InsertFromTemp(TBK_TEMP,  TBK,  connTgt, keyFieldName, logFile)
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR
-Call InsertFromTemp(TBKTR_TEMP, TBKTR, connTgt, keyFieldName, logFile)
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR2
-Call InsertFromTemp(TBKTR2_TEMP, TBKTR2, connTgt, keyFieldName, logFile)
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥2
-Call InsertFromTemp(TBKU1_TEMP, TBKU1, connTgt, keyFieldName, logFile)
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥2
-Call InsertFromTemp(TBKU2_TEMP, TBKU2, connTgt, keyFieldName, logFile)
-
-' -------------------------
-' INSERTï¼ˆå…¨ãƒ‡ãƒ¼ã‚¿ã«è¿½åŠ ï¼‰
-' -------------------------
-sql = ""
-Set rs = connSrc.Execute("SELECT * FROM [" & MG & "] WHERE 1=0")
-fieldNames = ""
-fieldCount = rs.Fields.Count
-for i = 0 to fieldCount - 1
-  fieldNames = fieldNames & "[" & rs.Fields(i).Name & "]"
-  if i < fieldCount - 1 then fieldNames = fieldNames & ", "
-next
-rs.Close
-Set rs = connSrc.Execute("SELECT * FROM [" & MG & "]")
-while not rs.EOF
-  values = ""
-  for i = 0 to fieldCount - 1
-    value = rs.Fields(i).Value
-    if IsNull(value) then
-      values = values & "NULL"
-    ElseIf rs.Fields(i).Type = 202 or rs.Fields(i).Type = 203 or rs.Fields(i).Type = 129 then
-      values = values & "'" & Replace(value, "'", "''") & "'"
-    ElseIf rs.Fields(i).Type = 7 Then
-      values = values & "#" & Format(value, "yyyy/mm/dd hh:nn:ss") & "#"
-    else
-      values = values & value
-    end if
-    if i < fieldCount - 1 then values = values & ", "
-  next
-  sql = "INSERT INTO [" & MG & "] (" & fieldNames & ") VALUES (" & values & ")"
+if DBCopyF = True then
+  logFile.WriteLine "DBƒRƒs[’¼Œã‚Ì‚½‚ßA‘Sƒf[ƒ^DB‚Ìƒf[ƒ^íœ‚ÍƒXƒLƒbƒv‚µ‚Ü‚µ‚½B"
+Else
+  ' DBDA010_Ø“ü‹à_TEMP
+  sql = ""
+  sql = sql & "DELETE * FROM [" & TBK_TEMP & "] "
   connTgt.Execute sql
-  rs.MoveNext
-wend
-rs.Close
-Set rs = Nothing
+
+  ' DBDA010_Ø“ü‹à–¾×TR_TEMP
+  sql = ""
+  sql = sql & "DELETE * FROM [" & TBKTR_TEMP & "] "
+  connTgt.Execute sql
+
+  ' DBDA010_Ø“ü‹à–¾×TR2_TEMP
+  sql = ""
+  sql = sql & "DELETE * FROM [" & TBKTR2_TEMP & "] "
+  connTgt.Execute sql
+
+  ' DBDA010_Ø“ü‹à“à“ü1_TEMP
+  sql = ""
+  sql = sql & "DELETE * FROM [" & TBKU1_TEMP & "] "
+  connTgt.Execute sql
+
+  ' DBDA010_Ø“ü‹à“à“ü2_TEMP
+  sql = ""
+  sql = sql & "DELETE * FROM [" & TBKU2_TEMP & "] "
+  connTgt.Execute sql
+
+  ' DBDA010_‹âsƒ}ƒXƒ^
+  sql = ""
+  sql = sql & "DELETE * FROM [" & MG & "] "
+  connTgt.Execute sql
+
+  ' DACA010_j“úƒ}ƒXƒ^
+  sql = ""
+  sql = sql & "DELETE * FROM [" & MS & "] "
+  connTgt.Execute sql
+
+  ' DABA010_Š¨’è‰È–Úƒ}ƒXƒ^
+  sql = ""
+  sql = sql & "DELETE * FROM [" & MK & "] "
+  connTgt.Execute sql
+
+  ' DABA020_•â•‰È–Úƒ}ƒXƒ^
+  sql = ""
+  sql = sql & "DELETE * FROM [" & MH & "] "
+  connTgt.Execute sql
+End if
 
 ' -------------------------
-' DELETEï¼ˆå®Œæ¸ˆãƒ‡ãƒ¼ã‚¿å‰Šé™¤ã€æ¡ä»¶å¹´åº¦å†…ã¯æ®‹ã™ï¼‰
+' INSERTi‘Sƒf[ƒ^.TEMPƒe[ƒuƒ‹‚É’Ç‰Áj
 ' -------------------------
-' DBDA010_å€Ÿå…¥é‡‘
+if DBCopyF = True then
+  logFile.WriteLine "DBƒRƒs[’¼Œã‚Ì‚½‚ßATEMPƒe[ƒuƒ‹‚Ö‚Ìƒf[ƒ^’Ç‰Á‚ÍƒXƒLƒbƒv‚µ‚Ü‚µ‚½B"
+Else
+  ' DBDA010_Ø“ü‹à
+  Call InsertByRecordset(connSrc, connTgt, TBK, TBK_TEMP, logFile)
+  ' DBDA010_Ø“ü‹à–¾×TR
+  Call InsertByRecordset(connSrc, connTgt, TBKTR, TBKTR_TEMP, logFile)
+  ' DBDA010_Ø“ü‹à–¾×TR2
+  Call InsertByRecordset(connSrc, connTgt, TBKTR2, TBKTR2_TEMP, logFile)
+  ' DBDA010_Ø“ü‹à“à“ü1
+  Call InsertByRecordset(connSrc, connTgt, TBKU1, TBKU1_TEMP, logFile)
+  ' DBDA010_Ø“ü‹à“à“ü2
+  Call InsertByRecordset(connSrc, connTgt, TBKU2, TBKU2_TEMP, logFile)
+End if
+
+' -------------------------
+' INSERTi·•ª’Ç‰Á‚ğTEMPƒe[ƒuƒ‹‚©‚ç’Ç‰Áj
+' -------------------------
+if DBCopyF = True then
+  logFile.WriteLine "DBƒRƒs[’¼Œã‚Ì‚½‚ßA·•ª’Ç‰Á‚ÌTEMPƒe[ƒuƒ‹‚©‚ç‚Ìƒf[ƒ^’Ç‰Á‚ÍƒXƒLƒbƒv‚µ‚Ü‚µ‚½B"
+Else
+  ' DBDA010_Ø“ü‹à
+  Call InsertFromTemp(TBK_TEMP,  TBK,  connTgt, keyFieldName, logFile)
+  ' DBDA010_Ø“ü‹à–¾×TR
+  Call InsertFromTemp(TBKTR_TEMP, TBKTR, connTgt, keyFieldName, logFile)
+  ' DBDA010_Ø“ü‹à–¾×TR2
+  Call InsertFromTemp(TBKTR2_TEMP, TBKTR2, connTgt, keyFieldName, logFile)
+  ' DBDA010_Ø“ü‹à“à“ü2
+  Call InsertFromTemp(TBKU1_TEMP, TBKU1, connTgt, keyFieldName, logFile)
+  ' DBDA010_Ø“ü‹à“à“ü2
+  Call InsertFromTemp(TBKU2_TEMP, TBKU2, connTgt, keyFieldName, logFile)
+End if
+
+' -------------------------
+' INSERTiØ“ü‹àˆÈŠO‚Ìƒe[ƒuƒ‹ ‘Sƒf[ƒ^‚É’Ç‰Áj
+' -------------------------
+if DBCopyF = True then
+  logFile.WriteLine "DBƒRƒs[’¼Œã‚Ì‚½‚ßAØ“ü‹àˆÈŠO‚Ìƒe[ƒuƒ‹‚Ì‘Sƒf[ƒ^‚Ö‚Ìƒf[ƒ^’Ç‰Á‚ÍƒXƒLƒbƒv‚µ‚Ü‚µ‚½B"
+Else
+  ' DBDA010_‹âsƒ}ƒXƒ^
+  sql = ""
+  Set rs = connSrc.Execute("SELECT * FROM [" & MG & "] WHERE 1=0")
+  fieldNames = ""
+  fieldCount = rs.Fields.Count
+  for i = 0 to fieldCount - 1
+    fieldNames = fieldNames & "[" & rs.Fields(i).Name & "]"
+    if i < fieldCount - 1 then fieldNames = fieldNames & ", "
+  next
+  rs.Close
+  Set rs = connSrc.Execute("SELECT * FROM [" & MG & "]")
+  insertCount = 0  
+  while not rs.EOF
+    values = ""
+    for i = 0 to fieldCount - 1
+      value = rs.Fields(i).Value
+      if IsNull(value) then
+        values = values & "NULL"
+      ElseIf rs.Fields(i).Type = 202 or rs.Fields(i).Type = 203 or rs.Fields(i).Type = 129 then
+        values = values & "'" & Replace(value, "'", "''") & "'"
+      else
+        values = values & value
+      end if
+      if i < fieldCount - 1 then values = values & ", "
+    next
+    sql = "INSERT INTO [" & MG & "] (" & fieldNames & ") VALUES (" & values & ")"
+    connTgt.Execute sql, recordsAffected
+    insertCount = insertCount + recordsAffected
+
+    rs.MoveNext
+  wend
+  rs.Close
+  Set rs = Nothing
+  logFile.WriteLine _
+      "ƒe[ƒuƒ‹ [" & MG & "] ‚É " & insertCount & " Œ’Ç‰Á‚µ‚Ü‚µ‚½B"
+
+  ' DACA010_j“úƒ}ƒXƒ^
+  sql = ""
+  Set rs = connSrc.Execute("SELECT * FROM [" & MS & "] WHERE 1=0")
+  fieldNames = ""
+  fieldCount = rs.Fields.Count
+  for i = 0 to fieldCount - 1
+    fieldNames = fieldNames & "[" & rs.Fields(i).Name & "]"
+    if i < fieldCount - 1 then fieldNames = fieldNames & ", "
+  next
+  rs.Close
+  Set rs = connSrc.Execute("SELECT * FROM [" & MS & "]")
+  insertCount = 0
+  while not rs.EOF
+    values = ""
+    for i = 0 to fieldCount - 1
+      value = rs.Fields(i).Value
+      if IsNull(value) then
+        values = values & "NULL"
+      ElseIf rs.Fields(i).Type = 202 or rs.Fields(i).Type = 203 or rs.Fields(i).Type = 129 then
+        values = values & "'" & Replace(value, "'", "''") & "'"
+      ElseIf rs.Fields(i).Type = 7 Then
+        If IsDate(value) Then
+          values = values & "#" & FormatDateTime(value, vbShortDate) & "#"
+        Else
+          values = values & "NULL" ' or handle as needed
+        End If
+      else
+        values = values & value
+      end if
+      if i < fieldCount - 1 then values = values & ", "
+    next
+    sql = "INSERT INTO [" & MS & "] (" & fieldNames & ") VALUES (" & values & ")"
+    connTgt.Execute sql, recordsAffected
+    insertCount = insertCount + recordsAffected
+
+    rs.MoveNext
+  wend
+  rs.Close
+  Set rs = Nothing
+  logFile.WriteLine _
+      "ƒe[ƒuƒ‹ [" & MS & "] ‚É " & insertCount & " Œ’Ç‰Á‚µ‚Ü‚µ‚½B"
+    
+  ' DABA010_Š¨’è‰È–Úƒ}ƒXƒ^
+  sql = ""
+  Set rs = connSrc.Execute("SELECT * FROM [" & MK & "] WHERE 1=0")
+  fieldNames = ""
+  fieldCount = rs.Fields.Count
+  for i = 0 to fieldCount - 1
+    fieldNames = fieldNames & "[" & rs.Fields(i).Name & "]"
+    if i < fieldCount - 1 then fieldNames = fieldNames & ", "
+  next
+  rs.Close
+  Set rs = connSrc.Execute("SELECT * FROM [" & MK & "]")
+  insertCount = 0
+  while not rs.EOF
+    values = ""
+    for i = 0 to fieldCount - 1
+      value = rs.Fields(i).Value
+      if IsNull(value) then
+        values = values & "NULL"
+      ElseIf rs.Fields(i).Type = 202 or rs.Fields(i).Type = 203 or rs.Fields(i).Type = 129 then
+        values = values & "'" & Replace(value, "'", "''") & "'"
+      else
+        values = values & value
+      end if
+      if i < fieldCount - 1 then values = values & ", "
+    next
+    sql = "INSERT INTO [" & MK & "] (" & fieldNames & ") VALUES (" & values & ")"
+    connTgt.Execute sql, recordsAffected
+    insertCount = insertCount + recordsAffected
+
+    rs.MoveNext
+  wend
+  rs.Close
+  Set rs = Nothing
+  logFile.WriteLine _
+      "ƒe[ƒuƒ‹ [" & MK & "] ‚É " & insertCount & " Œ’Ç‰Á‚µ‚Ü‚µ‚½B"  
+
+  ' DABA020_•â•‰È–Úƒ}ƒXƒ^
+  sql = ""
+  Set rs = connSrc.Execute("SELECT * FROM [" & MH & "] WHERE 1=0")
+  fieldNames = ""
+  fieldCount = rs.Fields.Count
+  for i = 0 to fieldCount - 1
+    fieldNames = fieldNames & "[" & rs.Fields(i).Name & "]"
+    if i < fieldCount - 1 then fieldNames = fieldNames & ", "
+  next
+  rs.Close
+  Set rs = connSrc.Execute("SELECT * FROM [" & MH & "]")
+  insertCount = 0
+  while not rs.EOF
+    values = ""
+    for i = 0 to fieldCount - 1
+      value = rs.Fields(i).Value
+      if IsNull(value) then
+        values = values & "NULL"
+      ElseIf rs.Fields(i).Type = 202 or rs.Fields(i).Type = 203 or rs.Fields(i).Type = 129 then
+        values = values & "'" & Replace(value, "'", "''") & "'"
+      else
+        values = values & value
+      end if
+      if i < fieldCount - 1 then values = values & ", "
+    next
+    sql = "INSERT INTO [" & MH & "] (" & fieldNames & ") VALUES (" & values & ")"
+    connTgt.Execute sql, recordsAffected
+    insertCount = insertCount + recordsAffected
+
+    rs.MoveNext
+  wend
+  rs.Close
+  Set rs = Nothing
+  logFile.WriteLine _
+      "ƒe[ƒuƒ‹ [" & MH & "] ‚É " & insertCount & " Œ’Ç‰Á‚µ‚Ü‚µ‚½B" 
+End if
+
+' -------------------------
+' DELETEiŠ®Ïƒf[ƒ^íœAğŒ”N“x“à‚Íc‚·j
+' -------------------------
+' DBDA010_Ø“ü‹à
 sql = ""
 sql = sql & "DELETE K.* "
 sql = sql & "FROM [" & TBK & "] AS K "
 sql = sql & "WHERE NOT ("
-sql = sql & " (K.è§£ç´„å®Ÿè¡Œæ—¥ IS NULL "
-sql = sql & " AND K.æœ€çµ‚è¿”æ¸ˆå®Ÿè¡Œæ—¥ >= " & baseDate & ")"
+sql = sql & " (K.‰ğ–ñÀs“ú IS NULL "
+sql = sql & " AND K.ÅI•ÔÏÀs“ú >= " & baseDate & ")"
 sql = sql & " OR "
-sql = sql & " (K.è§£ç´„å®Ÿè¡Œæ—¥ IS NOT NULL "
-sql = sql & " AND K.è§£ç´„å®Ÿè¡Œæ—¥ >= " & baseDate & ")"
+sql = sql & " (K.‰ğ–ñÀs“ú IS NOT NULL "
+sql = sql & " AND K.‰ğ–ñÀs“ú >= " & baseDate & ")"
 sql = sql & ");"
-connSrc.Execute sql
+connSrc.Execute sql, recordsAffected
+logFile.WriteLine "ƒe[ƒuƒ‹ [" & TBK & "] ‚©‚ç " & recordsAffected & " Œíœ‚µ‚Ü‚µ‚½BiŠ®Ïƒf[ƒ^j"  
 
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR
+' DBDA010_Ø“ü‹à–¾×TR
 sql = ""
 sql = sql & "DELETE TR.* "
 sql = sql & "FROM [" & TBKTR & "] AS TR "
-sql = sql & "LEFT JOIN [" & TBK & "] AS K ON TR.å€Ÿå…¥ç•ªå· = K.å€Ÿå…¥ç•ªå· "
+sql = sql & "LEFT JOIN [" & TBK & "] AS K ON TR.Ø“ü”Ô† = K.Ø“ü”Ô† "
 sql = sql & "WHERE"
-sql = sql & " K.å€Ÿå…¥ç•ªå· IS NULL;"
-connSrc.Execute sql
+sql = sql & " K.Ø“ü”Ô† IS NULL;"
+connSrc.Execute sql, recordsAffected
+logFile.WriteLine "ƒe[ƒuƒ‹ [" & TBKTR & "] ‚©‚ç " & recordsAffected & " Œíœ‚µ‚Ü‚µ‚½BiŠ®Ïƒf[ƒ^ŠÖ˜Aj"
 
-' DBDA010_å€Ÿå…¥é‡‘æ˜ç´°TR2
+' DBDA010_Ø“ü‹à–¾×TR2
 sql = ""
 sql = sql & "DELETE TR2.* "
 sql = sql & "FROM [" & TBKTR2 & "] AS TR2 "
-sql = sql & "LEFT JOIN [" & TBK & "] AS K ON TR2.å€Ÿå…¥ç•ªå· = K.å€Ÿå…¥ç•ªå· "
+sql = sql & "LEFT JOIN [" & TBK & "] AS K ON TR2.Ø“ü”Ô† = K.Ø“ü”Ô† "
 sql = sql & "WHERE"
-sql = sql & " K.å€Ÿå…¥ç•ªå· IS NULL;"
-connSrc.Execute sql
+sql = sql & " K.Ø“ü”Ô† IS NULL;"
+connSrc.Execute sql, recordsAffected
+logFile.WriteLine "ƒe[ƒuƒ‹ [" & TBKTR2 & "] ‚©‚ç " & recordsAffected & " Œíœ‚µ‚Ü‚µ‚½BiŠ®Ïƒf[ƒ^ŠÖ˜Aj"
 
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥1
+' DBDA010_Ø“ü‹à“à“ü1
 sql = ""
 sql = sql & "DELETE U1.* "
 sql = sql & "FROM [" & TBKU1 & "] AS U1 "
-sql = sql & "LEFT JOIN [" & TBK & "] AS K ON U1.å€Ÿå…¥ç•ªå· = K.å€Ÿå…¥ç•ªå· "
+sql = sql & "LEFT JOIN [" & TBK & "] AS K ON U1.Ø“ü”Ô† = K.Ø“ü”Ô† "
 sql = sql & "WHERE"
-sql = sql & " K.å€Ÿå…¥ç•ªå· IS NULL;"
-connSrc.Execute sql
+sql = sql & " K.Ø“ü”Ô† IS NULL;"
+connSrc.Execute sql, recordsAffected
+logFile.WriteLine "ƒe[ƒuƒ‹ [" & TBKU1 & "] ‚©‚ç " & recordsAffected & " Œíœ‚µ‚Ü‚µ‚½BiŠ®Ïƒf[ƒ^ŠÖ˜Aj"
 
-' DBDA010_å€Ÿå…¥é‡‘å†…å…¥2
+' DBDA010_Ø“ü‹à“à“ü2
 sql = ""
 sql = sql & "DELETE U2.* "
 sql = sql & "FROM [" & TBKU2 & "] AS U2 "
-sql = sql & "LEFT JOIN [" & TBK & "] AS K ON U2.å€Ÿå…¥ç•ªå· = K.å€Ÿå…¥ç•ªå· "
+sql = sql & "LEFT JOIN [" & TBK & "] AS K ON U2.Ø“ü”Ô† = K.Ø“ü”Ô† "
 sql = sql & "WHERE"
-sql = sql & " K.å€Ÿå…¥ç•ªå· IS NULL;"
-connSrc.Execute sql
+sql = sql & " K.Ø“ü”Ô† IS NULL;"
+connSrc.Execute sql, recordsAffected
+logFile.WriteLine "ƒe[ƒuƒ‹ [" & TBKU2 & "] ‚©‚ç " & recordsAffected & " Œíœ‚µ‚Ü‚µ‚½BiŠ®Ïƒf[ƒ^ŠÖ˜Aj"
 
 ' -------------------------
-' çµ‚äº†å‡¦ç†
+' I—¹ˆ—
 ' -------------------------
-logFile.WriteLine "å‡¦ç†ãŒå®Œäº†ã—ã¾ã—ãŸã€‚ End:" & Now()
+logFile.WriteLine "ˆ—‚ªŠ®—¹‚µ‚Ü‚µ‚½B End:" & Now()
 
 connSrc.Close
 connTgt.Close
@@ -460,10 +617,10 @@ logFile.Close
 Set logFile = Nothing
 Set fso = Nothing
 
-MsgBox "å‡¦ç†ãŒå®Œäº†ã—ã¾ã—ãŸã€‚" & vbCrLf & "ï¼ˆåŸºæº–æ—¥ï¼š" & baseDate & " ã‚ˆã‚Šå‰ã®ãƒ‡ãƒ¼ã‚¿ã‚’ç§»è¡Œã—ã¾ã—ãŸã€‚ï¼‰" , vbOKOnly, "å¹´æ¬¡æ›´æ–°å®Œäº†"
+MsgBox "ˆ—‚ªŠ®—¹‚µ‚Ü‚µ‚½B" & vbCrLf & "iŠî€“úF" & baseDate & " ‚æ‚è‘O‚Ìƒf[ƒ^‚ğˆÚs‚µ‚Ü‚µ‚½Bj" , vbOKOnly, "”NŸXVŠ®—¹"
 
 ' -------------------------
-' INSERTï¼ˆTEMPãƒ†ãƒ¼ãƒ–ãƒ«ã‹ã‚‰è¿½åŠ ï¼‰
+' INSERTiTEMPƒe[ƒuƒ‹‚©‚ç’Ç‰Áj
 ' -------------------------
 Sub InsertByRecordset( _
     srcConn, _
@@ -484,7 +641,7 @@ Sub InsertByRecordset( _
   Dim insertCount
 
   '-------------------------
-  ' ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰å®šç¾©å–å¾—ï¼ˆsrcï¼‰
+  ' ƒtƒB[ƒ‹ƒh’è‹`æ“¾isrcj
   '-------------------------
   Set rs = srcConn.Execute("SELECT * FROM [" & srcTableName & "] WHERE 1=0")
 
@@ -500,7 +657,7 @@ Sub InsertByRecordset( _
   Set rs = Nothing
 
   '-------------------------
-  ' ãƒ‡ãƒ¼ã‚¿å–å¾—ï¼ˆsrcï¼‰
+  ' ƒf[ƒ^æ“¾isrcj
   '-------------------------
   Set rs = srcConn.Execute("SELECT * FROM [" & srcTableName & "]")
   insertCount = 0
@@ -520,8 +677,7 @@ Sub InsertByRecordset( _
             values = values & "'" & Replace(value, "'", "''") & "'"
 
           Case 7
-            values = values & "#" & _
-                     FormatDateTime(value, vbGeneralDate) & "#"
+            values = values & "#" & FormatDateTime(value, vbShortDate) & "#"
 
           Case Else
             values = values & value
@@ -544,12 +700,12 @@ Sub InsertByRecordset( _
   Set rs = Nothing
 
   logFile.WriteLine _
-    "ãƒ†ãƒ¼ãƒ–ãƒ« [" & tgtTableName & "] ã« " & insertCount & _
-    " ä»¶è¿½åŠ ã—ã¾ã—ãŸã€‚ï¼ˆå…ƒ: " & srcTableName & "ï¼‰"
+    "ƒe[ƒuƒ‹ [" & tgtTableName & "] ‚É " & insertCount & _
+    " Œ’Ç‰Á‚µ‚Ü‚µ‚½BiŒ³: " & srcTableName & "j"
 End Sub
 
 ' -------------------------
-' INSERTï¼ˆTEMPãƒ†ãƒ¼ãƒ–ãƒ«ã‹ã‚‰è¿½åŠ ï¼‰
+' INSERTiTEMPƒe[ƒuƒ‹‚©‚ç’Ç‰Áj
 ' -------------------------
 Sub InsertFromTemp( _
     tempTableName, _
@@ -573,7 +729,7 @@ Sub InsertFromTemp( _
   conn.Execute sql, recordsAffected
 
   logFile.WriteLine _
-    "ãƒ†ãƒ¼ãƒ–ãƒ« [" & mainTableName & "] ã« " & _
-    recordsAffected & " ä»¶è¿½åŠ ã—ã¾ã—ãŸã€‚ï¼ˆå…ƒ: " & tempTableName & "ï¼‰"
+    "ƒe[ƒuƒ‹ [" & mainTableName & "] ‚É " & _
+    recordsAffected & " Œ’Ç‰Á‚µ‚Ü‚µ‚½BiŒ³: " & tempTableName & "j"
 
 End Sub
