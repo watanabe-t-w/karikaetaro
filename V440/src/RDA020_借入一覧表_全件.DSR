@@ -1,0 +1,401 @@
+VERSION 5.00
+Begin {9EB8768B-CDFA-44DF-8F3E-857A8405E1DB} RDA020_借入一覧表_全件 
+   Caption         =   "借入一覧表"
+   ClientHeight    =   6765
+   ClientLeft      =   60
+   ClientTop       =   345
+   ClientWidth     =   10380
+   Icon            =   "RDA020_借入一覧表_全件.dsx":0000
+   StartUpPosition =   2  '画面の中央
+   WindowState     =   2  '最大化
+   _ExtentX        =   18309
+   _ExtentY        =   11933
+   SectionData     =   "RDA020_借入一覧表_全件.dsx":0ECA
+End
+Attribute VB_Name = "RDA020_借入一覧表_全件"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Explicit
+'
+Private Const pPROGRAM_ID As String = "RDA020_借入一覧表_全件"
+
+Dim wstr As String
+Dim wRs As Recordset
+
+Dim w分母 As Integer
+'
+'------------------------------------------------
+' ActiveReport_ReportStart
+'------------------------------------------------
+Private Sub ActiveReport_ReportStart()
+'
+    Dim wsTbl As String, wsS As String
+    
+    Dim j As Integer
+    Dim wOrder As String
+    Dim FLG_Order As Boolean
+'
+    On Error GoTo ActiveReport_ReportStart_ERR
+'
+    '----------------------------------------------------------------
+    '                         ** 初期設定 **
+    '----------------------------------------------------------------
+    'Connection
+    Me.DataControl1.Connection = GDb
+   
+    '用紙セット
+    Printer.PaperSize = vbPRPSA4
+    Printer.Orientation = ddOLandscape
+'
+    '06/02/01 V150
+    Select Case GRpt.帳票名
+    Case "借入一覧表", "借入一覧表(全件)"
+        wsTbl = "DBDA010_借入金"
+        
+        Me.PageHeader.Controls("L_番号").Caption = "借入番号"
+    Case "貸付一覧表"
+        wsTbl = "DBDA010_貸付金"
+    
+        Me.PageHeader.Controls("L_番号").Caption = "貸付番号"
+    End Select
+'
+    '----------------------------------------------------------------
+    '                           ** 見出し **
+    '----------------------------------------------------------------
+    出力日 = Now
+    企業名 = GCoName
+    
+    If GRpt.千円単位 = 1 Then
+        w分母 = 1000
+        L_単位.Caption = "（千円単位）"
+    Else
+        w分母 = 1
+        L_単位 = "（円単位）"
+    End If
+    
+    '----------------------------------------------------------------
+    '          ** グループ ・ Where ・ OrderＢｙ **
+    '----------------------------------------------------------------
+    'グループセット
+    'GroupHeader1.DataField = "GrpFld_Ginko"
+    
+    If GRpt.S_種別 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_KShubetu"
+    ElseIf GRpt.S_種別 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_KShubetu"
+    End If
+    
+    If GRpt.S_部門 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_Bumon"
+    ElseIf GRpt.S_部門 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_Bumon"
+    End If
+    
+    If GRpt.S_金融 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_Kinyu"
+    ElseIf GRpt.S_金融 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_Kinyu"
+    End If
+    
+    If GRpt.S_銀行 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_Ginko"
+    ElseIf GRpt.S_銀行 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_Ginko"
+    End If
+
+    '帳票指示
+    wsS = ""
+    If GRpt.借入金管理区分 = P8.FCDbl(XMXA020_区分("借入金管理区分", "決算用")) Then
+        wsS = wsS & "帳票指示:決算用 "
+    Else
+        wsS = wsS & "帳票指示:管理用 "
+    End If
+    
+    '計名セット、Shapeカラー
+    If GroupHeader1.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "分類1:借入金種別 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_借入金種別名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HFFFFC0
+    ElseIf GroupHeader1.DataField = "GrpFld_Bumon" Then
+        wsS = wsS & "分類1:部門 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_部門名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HC0FFC0
+    ElseIf GroupHeader1.DataField = "GrpFld_Kinyu" Then
+        wsS = wsS & "分類1:金融機関 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_金融機関名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HE0E0E0
+    ElseIf GroupHeader1.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "分類1:銀行 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_銀行名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HC0FFFF
+    End If
+    
+    If GroupHeader2.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "分類2:借入金種別 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_借入金種別名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HFFFFC0
+    ElseIf GroupHeader2.DataField = "GrpFld_Bumon" Then
+        wsS = wsS & "分類2:部門 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_部門名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HC0FFC0
+    ElseIf GroupHeader2.DataField = "GrpFld_Kinyu" Then
+        wsS = wsS & "分類2:金融機関 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_金融機関名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HE0E0E0
+    ElseIf GroupHeader2.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "分類2:銀行 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_銀行名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HC0FFFF
+    End If
+'
+    GroupFooter1.Visible = True
+    GroupFooter2.Visible = True
+    If GroupHeader1.DataField = "" Then
+        GroupFooter1.Visible = False
+    End If
+    If GroupHeader2.DataField = "" Then
+        GroupFooter2.Visible = False
+    End If
+'
+    '帳票指示
+    Me.PageHeader.Controls("L_帳票指示").Caption = wsS
+'
+    '改ページ
+    Me.GroupFooter1.NewPage = GRpt.NewPage1
+    Me.GroupFooter2.NewPage = GRpt.NewPage2
+'
+    '----------------------------------------------------------------
+    '                       ** 印字用ファイル作成 **
+    '----------------------------------------------------------------
+    
+    '----------------------------------------------------------------
+    '                       ** レコード　ソース **
+    '----------------------------------------------------------------
+    wstr = ""
+    wstr = wstr & "Select "
+    
+    'セクションGR
+    wstr = wstr & "K.銀行番号 As GrpFld_Ginko,"
+    wstr = wstr & "G.金融機関番号 As GrpFld_Kinyu,"
+    wstr = wstr & "B.部門番号 As GrpFld_Bumon,"
+    wstr = wstr & " K.借入金種別区分 As GrpFld_KShubetu,"
+    
+    wstr = wstr & "G.銀行名 As I_銀行名,"
+    wstr = wstr & "G.金融機関名 As I_金融機関名,"
+    wstr = wstr & "B.部門名 As I_部門名,"
+    wstr = wstr & "S.借入金種別名 As I_借入金種別名,"
+    
+    wstr = wstr & "K.借入番号 As I_借入番号,"
+    'wstr = wstr & "G.銀行名 As I_銀行名,"
+    wstr = wstr & "IIF(K.長短区分 = " & P8.FCDbl(XMXA020_区分("長短区分", "短期借入金")) & ",'短期','長期') AS I_長短,"
+    wstr = wstr & "IIF(K.金利種別 = " & P8.FCDbl(XMXA020_区分("金利種別", "変動金利")) & ",'変動金利','固定金利') As I_金利種別,"
+    wstr = wstr & "IIF(K.有担保フラグ = " & P8.FCDbl(XMXA020_区分("有担フラグ", "有担保")) & ",'有担保','無担保') As I_担保,"
+    
+    '17/10/25 利子補給に伴う変更
+    'wstr = wstr & "K.融資金額 As I_融資金額,"
+    wstr = wstr & "IIF(S.利子補給金フラグ=0,K.融資金額,0) As I_融資金額,"
+    
+    wstr = wstr & "K.利率 As I_利率,"
+    wstr = wstr & "K.返済単位月数 As I_返済単位月数,"
+    wstr = wstr & "Format(K.実行日,'" & Gfmt年月日 & "') As I_実行日,"
+    wstr = wstr & "Format(K.初回返済年月,'" & Gfmt年月 & "') As I_初回返済年月,"
+    wstr = wstr & "Format(K.最終返済年月,'" & Gfmt年月 & "') As I_最終返済年月,"
+    
+    '17/10/25 利子補給に伴う変更
+    'wstr = wstr & "K.毎月返済額 As I_毎月返済額,"
+    wstr = wstr & "IIF(S.利子補給金フラグ=0,IIF(K.手入力区分=" & P8.FCDbl(XMXA020_区分("登録方法", "標準登録")) & ",K.毎月返済額,0),0) As I_毎月返済額,"
+    
+    wstr = wstr & "K.初回返済額 As I_初回返済額,"
+    wstr = wstr & "IIF(手入力区分=1,'手入力','') As 手入力フラグ"
+    
+    wstr = wstr & " From ((" & wsTbl & " As K"
+    wstr = wstr & " Inner JOIN DAAA040_銀行マスタ As G"
+    wstr = wstr & " ON K.銀行番号 = G.銀行番号)"
+    wstr = wstr & " LEFT JOIN DAAA116_借入金種別 As S"
+    wstr = wstr & " ON K.借入金種別区分 = S.借入金種別区分)"
+    wstr = wstr & " LEFT JOIN DAAA200_部門マスタ As B"
+    wstr = wstr & " ON K.プロジェクト番号 = B.部門番号"
+    
+    'wOrder
+    wOrder = "": FLG_Order = False
+    For j = 1 To 2
+        If (GRpt.S_金融 = "分類" & CStr(j) Or GRpt.S_銀行 = "分類" & CStr(j)) _
+        And FLG_Order = False Then
+            wOrder = wOrder & "K.銀行番号,"
+            FLG_Order = True
+        ElseIf GRpt.S_種別 = "分類" & CStr(j) Then
+            wOrder = wOrder & "K.借入金種別区分,"
+        ElseIf GRpt.S_部門 = "分類" & CStr(j) Then
+            wOrder = wOrder & "B.部門番号,"
+        ElseIf GRpt.S_金利 = "分類" & CStr(j) Then
+            If GStr <> "金利GR" Then
+                wOrder = wOrder & "K.借入金種別区分,"
+            Else
+            '金利SM
+                wOrder = wOrder & "IIF(K.金利グループ区分<>'',K.金利グループ区分,'99999'),"
+            End If
+        End If
+    Next j
+    wOrder = " Order by " & wOrder & "K.借入番号"
+    wstr = wstr & wOrder
+
+    Me.DataControl1.Source = wstr
+'
+    Exit Sub
+'
+'----------< ERROR ROUTINE >--------------------------------------------------------
+ActiveReport_ReportStart_ERR:
+    pERR_MES = pPROGRAM_ID + "/ ActiveReport_ReportStart() でエラー" + vbCrLf + vbCrLf + _
+                "エラー番号　　：" + CStr(Err.Number) + vbCrLf + _
+                "プロジェクト名：" + Err.Source + vbCrLf + _
+                "エラー内容　　：" + Err.Description + vbCrLf + vbCrLf + _
+                GProduct + "を終了します"
+    pERR_RET = MsgBox(pERR_MES, vbOKOnly + vbCritical, pMSGBOX_TYTLE)
+    pERR_RET = PUT_LOG(pERR_MES)
+
+    End
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_ReportEnd
+'------------------------------------------------
+Private Sub ActiveReport_ReportEnd()
+'
+    'FBA010_帳票範囲指定.メッセージ = ""
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+'
+    ' =========================================
+    '           　 CsvFile 作成
+    ' =========================================
+    If GRpt.CSV = 1 Then
+        Call MX040_CsvOut_KARI
+    End If
+'
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    ' =========================================
+    '  借換たろう！お試し版帳票出力回数チェック
+    ' =========================================
+    If GSys.Sys = "借入金 お試し版" Then
+        Call MAA001_KARIKAETAROU_CNT
+    End If
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_NoData
+'------------------------------------------------
+Private Sub ActiveReport_NoData()
+'
+    'FBA010_帳票範囲指定.メッセージ = "出力すべきデータはありません"
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+    GSstrt帳票Msg = "出力すべきデータはありません"
+'
+    Me.Cancel
+    DoEvents
+'
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_Error
+'------------------------------------------------
+Private Sub ActiveReport_Error(ByVal Number As Integer, ByVal Description As DDActiveReports2.IReturnString, ByVal Scode As Long, ByVal Source As String, ByVal HelpFile As String, ByVal HelpContext As Long, ByVal CancelDisplay As DDActiveReports2.IReturnBool)
+'
+    'FBA010_帳票範囲指定.メッセージ = "出力できませんでした"
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+    GSstrt帳票Msg = "出力できませんでした"
+'
+    Me.Cancel
+    DoEvents
+
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' Detail_BeforePrint
+'------------------------------------------------
+Private Sub Detail_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.Detail.Controls("I_融資金額"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_毎月返済額"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_利率"))
+    
+    Me.Detail.Controls("I_融資金額") = Format(P8.FCDblRD(Me.Detail.Controls("I_融資金額")) / w分母, "#,##0")
+    Me.Detail.Controls("I_毎月返済額") = Format(P8.FCDblRD(Me.Detail.Controls("I_毎月返済額")) / w分母, "#,##0")
+    Me.Detail.Controls("I_利率") = Format(P8.FCDblRD5(Me.Detail.Controls("I_利率")), "#,##0.00000")
+'
+    '手入力の場合は表示しない
+    If Me.Detail.Controls("手入力フラグ") <> "" Then
+        Me.Detail.Controls("I_返済単位月数") = ""
+    End If
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter1_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter1_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_融資金額"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_毎月返済額"))
+
+    Me.GroupFooter1.Controls("G10_融資金額") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_融資金額")) / w分母, "#,##0")
+    Me.GroupFooter1.Controls("G10_毎月返済額") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_毎月返済額")) / w分母, "#,##0")
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter2_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter2_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_融資金額"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_毎月返済額"))
+
+    Me.GroupFooter2.Controls("G20_融資金額") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_融資金額")) / w分母, "#,##0")
+    Me.GroupFooter2.Controls("G20_毎月返済額") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_毎月返済額")) / w分母, "#,##0")
+'
+End Sub
+
+'------------------------------------------------
+' ReportFooter_BeforePrint
+'------------------------------------------------
+Private Sub ReportFooter_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_融資金額"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_毎月返済額"))
+
+    Me.ReportFooter.Controls("G90_融資金額") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_融資金額")) / w分母, "#,##0")
+    Me.ReportFooter.Controls("G90_毎月返済額") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_毎月返済額")) / w分母, "#,##0")
+'
+End Sub
+
+

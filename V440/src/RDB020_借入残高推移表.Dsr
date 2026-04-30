@@ -1,0 +1,1462 @@
+VERSION 5.00
+Begin {9EB8768B-CDFA-44DF-8F3E-857A8405E1DB} RDB020_借入残高推移表 
+   Caption         =   "借入残高推移表"
+   ClientHeight    =   8640
+   ClientLeft      =   60
+   ClientTop       =   345
+   ClientWidth     =   13800
+   Icon            =   "RDB020_借入残高推移表.dsx":0000
+   StartUpPosition =   2  '画面の中央
+   WindowState     =   2  '最大化
+   _ExtentX        =   24342
+   _ExtentY        =   15240
+   SectionData     =   "RDB020_借入残高推移表.dsx":0ECA
+End
+Attribute VB_Name = "RDB020_借入残高推移表"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Explicit
+'
+Private Const pPROGRAM_ID As String = "RDB020_借入残高推移表"
+'
+Dim wRs As ADODB.Recordset
+
+Dim wstr As String
+Dim wWhere As String
+
+Dim wML As Integer
+Dim w番号 As String, wsTbl As String
+Dim w分母 As Integer
+
+Dim ws_Ginko As String
+
+'グループ集計
+Dim G1_Cnt(1) As Integer, G2_Cnt(1) As Integer, G3_Cnt(1) As Integer, G4_Cnt(1) As Integer, GT_Cnt(1) As Integer
+Dim G1_D(1, 12, 5) As Double, G2_D(1, 12, 5) As Double, G3_D(1, 12, 5) As Double, G4_D(1, 12, 5) As Double, GT_D(1, 12, 5) As Double '列数
+Dim G1_Zan(1) As Double, G2_Zan(1) As Double, G3_Zan(1) As Double, G4_Zan(1) As Double, GT_Zan(1) As Double
+'
+Dim w推移表タイトル As MAA910_推移表タイトル
+Dim FLG_RF As Boolean
+
+'------------------------------------------------
+' ActiveReport_ReportStart
+'------------------------------------------------
+Private Sub ActiveReport_ReportStart()
+'
+    Dim j As Integer, k As Integer, l As Integer, wiCnt As Integer
+    Dim ws01 As String, wsS As String, wOrder As String
+    Dim wsTL(5) As String
+    Dim FLG_Order As Boolean
+    
+    Dim w開始年月日 As Date, wdate As Date
+    Dim w推移表区分 As String
+'
+    On Error GoTo ActiveReport_ReportStart_ERR
+'
+    '----------------------------------------------------------------
+    '                         ** 初期設定 **
+    '----------------------------------------------------------------
+    'Connection
+    Me.DataControl1.Connection = GDb
+   
+    '用紙セット
+    Printer.PaperSize = vbPRPSA4
+    Printer.Orientation = ddOLandscape
+
+    wML = 12 '列数
+'
+    Me.PageHeader.Controls("L_金融リストラ番号").Visible = True
+    Me.PageHeader.Controls("H00_金融リストラ番号").Visible = True
+'
+    '貸借設定、wsTbl設定
+    wsTbl = ""
+    ws_Ginko = ""
+    Select Case GRpt.帳票名
+    Case "借入残高推移表", "利息借入残高推移表", "借換残高推移表"
+        wsTbl = "DBDA010_借入金"
+        ws_Ginko = "外部借入"
+        
+        Me.PageHeader.Controls("L_借入番号").Caption = "借入番号"
+        'Me.PageHeader.Controls("L_借入内容").Caption = "借入内容"
+        'Me.PageHeader.Controls("L_計画番号").Caption = "借入計画番号"
+        
+    Case "貸付残高推移表", "利息貸付残高推移表"
+        wsTbl = "DBDA010_貸付金"
+        ws_Ginko = "外部貸付"
+    
+        Me.PageHeader.Controls("L_借入番号").Caption = "貸付番号"
+        'Me.PageHeader.Controls("L_借入内容").Caption = "貸付内容"
+        'Me.PageHeader.Controls("L_計画番号").Caption = "貸付計画番号"
+        
+    End Select
+'
+    L_借換計画番号.Caption = ""
+    L_年月.Caption = ""
+    L_帳票名.Left = 2350
+    If GRpt.帳票名 = "借換残高推移表" Then
+        L_帳票名.Left = 5100
+        L_借換計画番号.Caption = "借換計画番号：" & GRpt.コンボ_01 & " "
+        L_年月.Caption = "借換指定年月：" & GRpt.コンボ_02 & " "
+    End If
+'
+    'ラベル設定
+    wsTL(0) = "融資金額"
+    wsTL(1) = "元金額"
+    wsTL(2) = "利息額"
+    wsTL(3) = "返済金額"
+    wsTL(4) = "解約金額"
+    wsTL(5) = "融資残高"
+
+    Select Case GRpt.帳票名
+    Case "借入残高推移表"
+    
+        wsTL(0) = "融資金額"
+        wsTL(1) = "元金額"
+        wsTL(2) = "利息額"
+        wsTL(3) = "返済金額"
+        wsTL(4) = "解約金額"
+        wsTL(5) = "融資残高"
+        
+    Case "貸付残高推移表"
+    
+        wsTL(0) = "貸付金額"
+        wsTL(1) = "元金額"
+        wsTL(2) = "利息額"
+        wsTL(3) = "返済金額"
+        wsTL(4) = "解約金額"
+        wsTL(5) = "貸付残高"
+    
+    End Select
+
+    Me.Detail.Controls("L_D01").Caption = wsTL(0)
+    Me.Detail.Controls("L_D02").Caption = wsTL(1)
+    Me.Detail.Controls("L_D03").Caption = wsTL(2)
+    Me.Detail.Controls("L_D04").Caption = wsTL(3)
+    Me.Detail.Controls("L_D05").Caption = wsTL(4)
+    Me.Detail.Controls("L_D06").Caption = wsTL(5)
+    '
+    Me.GroupFooter1.Controls("L_G101").Caption = wsTL(0)
+    Me.GroupFooter1.Controls("L_G102").Caption = wsTL(1)
+    Me.GroupFooter1.Controls("L_G103").Caption = wsTL(2)
+    Me.GroupFooter1.Controls("L_G104").Caption = wsTL(3)
+    Me.GroupFooter1.Controls("L_G105").Caption = wsTL(4)
+    Me.GroupFooter1.Controls("L_G106").Caption = wsTL(5)
+
+    Me.GroupFooter1.Controls("L_G111").Caption = wsTL(0)
+    Me.GroupFooter1.Controls("L_G112").Caption = wsTL(1)
+    Me.GroupFooter1.Controls("L_G113").Caption = wsTL(2)
+    Me.GroupFooter1.Controls("L_G114").Caption = wsTL(3)
+    Me.GroupFooter1.Controls("L_G115").Caption = wsTL(4)
+    Me.GroupFooter1.Controls("L_G116").Caption = wsTL(5)
+    
+    Me.GroupFooter1.Controls("L_G121").Caption = wsTL(0)
+    Me.GroupFooter1.Controls("L_G122").Caption = wsTL(1)
+    Me.GroupFooter1.Controls("L_G123").Caption = wsTL(2)
+    Me.GroupFooter1.Controls("L_G124").Caption = wsTL(3)
+    Me.GroupFooter1.Controls("L_G125").Caption = wsTL(4)
+    Me.GroupFooter1.Controls("L_G126").Caption = wsTL(5)
+    '
+    Me.GroupFooter2.Controls("L_G201").Caption = wsTL(0)
+    Me.GroupFooter2.Controls("L_G202").Caption = wsTL(1)
+    Me.GroupFooter2.Controls("L_G203").Caption = wsTL(2)
+    Me.GroupFooter2.Controls("L_G204").Caption = wsTL(3)
+    Me.GroupFooter2.Controls("L_G205").Caption = wsTL(4)
+    Me.GroupFooter2.Controls("L_G206").Caption = wsTL(5)
+
+    Me.GroupFooter2.Controls("L_G211").Caption = wsTL(0)
+    Me.GroupFooter2.Controls("L_G212").Caption = wsTL(1)
+    Me.GroupFooter2.Controls("L_G213").Caption = wsTL(2)
+    Me.GroupFooter2.Controls("L_G214").Caption = wsTL(3)
+    Me.GroupFooter2.Controls("L_G215").Caption = wsTL(4)
+    Me.GroupFooter2.Controls("L_G216").Caption = wsTL(5)
+    
+    Me.GroupFooter2.Controls("L_G221").Caption = wsTL(0)
+    Me.GroupFooter2.Controls("L_G222").Caption = wsTL(1)
+    Me.GroupFooter2.Controls("L_G223").Caption = wsTL(2)
+    Me.GroupFooter2.Controls("L_G224").Caption = wsTL(3)
+    Me.GroupFooter2.Controls("L_G225").Caption = wsTL(4)
+    Me.GroupFooter2.Controls("L_G226").Caption = wsTL(5)
+    '
+    Me.GroupFooter3.Controls("L_G301").Caption = wsTL(0)
+    Me.GroupFooter3.Controls("L_G302").Caption = wsTL(1)
+    Me.GroupFooter3.Controls("L_G303").Caption = wsTL(2)
+    Me.GroupFooter3.Controls("L_G304").Caption = wsTL(3)
+    Me.GroupFooter3.Controls("L_G305").Caption = wsTL(4)
+    Me.GroupFooter3.Controls("L_G306").Caption = wsTL(5)
+
+    Me.GroupFooter3.Controls("L_G311").Caption = wsTL(0)
+    Me.GroupFooter3.Controls("L_G312").Caption = wsTL(1)
+    Me.GroupFooter3.Controls("L_G313").Caption = wsTL(2)
+    Me.GroupFooter3.Controls("L_G314").Caption = wsTL(3)
+    Me.GroupFooter3.Controls("L_G315").Caption = wsTL(4)
+    Me.GroupFooter3.Controls("L_G316").Caption = wsTL(5)
+    
+    Me.GroupFooter3.Controls("L_G321").Caption = wsTL(0)
+    Me.GroupFooter3.Controls("L_G322").Caption = wsTL(1)
+    Me.GroupFooter3.Controls("L_G323").Caption = wsTL(2)
+    Me.GroupFooter3.Controls("L_G324").Caption = wsTL(3)
+    Me.GroupFooter3.Controls("L_G325").Caption = wsTL(4)
+    Me.GroupFooter3.Controls("L_G326").Caption = wsTL(5)
+    '
+    Me.GroupFooter4.Controls("L_G401").Caption = wsTL(0)
+    Me.GroupFooter4.Controls("L_G402").Caption = wsTL(1)
+    Me.GroupFooter4.Controls("L_G403").Caption = wsTL(2)
+    Me.GroupFooter4.Controls("L_G404").Caption = wsTL(3)
+    Me.GroupFooter4.Controls("L_G405").Caption = wsTL(4)
+    Me.GroupFooter4.Controls("L_G406").Caption = wsTL(5)
+
+    Me.GroupFooter4.Controls("L_G411").Caption = wsTL(0)
+    Me.GroupFooter4.Controls("L_G412").Caption = wsTL(1)
+    Me.GroupFooter4.Controls("L_G413").Caption = wsTL(2)
+    Me.GroupFooter4.Controls("L_G414").Caption = wsTL(3)
+    Me.GroupFooter4.Controls("L_G415").Caption = wsTL(4)
+    Me.GroupFooter4.Controls("L_G416").Caption = wsTL(5)
+    
+    Me.GroupFooter4.Controls("L_G421").Caption = wsTL(0)
+    Me.GroupFooter4.Controls("L_G422").Caption = wsTL(1)
+    Me.GroupFooter4.Controls("L_G423").Caption = wsTL(2)
+    Me.GroupFooter4.Controls("L_G424").Caption = wsTL(3)
+    Me.GroupFooter4.Controls("L_G425").Caption = wsTL(4)
+    Me.GroupFooter4.Controls("L_G426").Caption = wsTL(5)
+    '
+    Me.ReportFooter.Controls("L_R01").Caption = wsTL(0)
+    Me.ReportFooter.Controls("L_R02").Caption = wsTL(1)
+    Me.ReportFooter.Controls("L_R03").Caption = wsTL(2)
+    Me.ReportFooter.Controls("L_R04").Caption = wsTL(3)
+    Me.ReportFooter.Controls("L_R05").Caption = wsTL(4)
+    Me.ReportFooter.Controls("L_R06").Caption = wsTL(5)
+    
+    Me.ReportFooter.Controls("L_R11").Caption = wsTL(0)
+    Me.ReportFooter.Controls("L_R12").Caption = wsTL(1)
+    Me.ReportFooter.Controls("L_R13").Caption = wsTL(2)
+    Me.ReportFooter.Controls("L_R14").Caption = wsTL(3)
+    Me.ReportFooter.Controls("L_R15").Caption = wsTL(4)
+    Me.ReportFooter.Controls("L_R16").Caption = wsTL(5)
+    
+    Me.ReportFooter.Controls("L_R21").Caption = wsTL(0)
+    Me.ReportFooter.Controls("L_R22").Caption = wsTL(1)
+    Me.ReportFooter.Controls("L_R23").Caption = wsTL(2)
+    Me.ReportFooter.Controls("L_R24").Caption = wsTL(3)
+    Me.ReportFooter.Controls("L_R25").Caption = wsTL(4)
+    Me.ReportFooter.Controls("L_R26").Caption = wsTL(5)
+'
+    'Top
+    For j = 0 To wML
+        ws01 = Right("00" + CStr(j), 2)
+        '1
+        Me.GroupFooter1.Controls("G10_" & ws01 & "1").Top = 420
+        Me.GroupFooter1.Controls("G10_" & ws01 & "2").Top = 630
+        Me.GroupFooter1.Controls("G10_" & ws01 & "3").Top = 840
+        Me.GroupFooter1.Controls("G10_" & ws01 & "4").Top = 1050
+        Me.GroupFooter1.Controls("G10_" & ws01 & "5").Top = 1260
+        Me.GroupFooter1.Controls("G10_" & ws01 & "6").Top = 1470
+        
+        Me.GroupFooter1.Controls("G11_" & ws01 & "1").Top = 2040
+        Me.GroupFooter1.Controls("G11_" & ws01 & "2").Top = 2250
+        Me.GroupFooter1.Controls("G11_" & ws01 & "3").Top = 2460
+        Me.GroupFooter1.Controls("G11_" & ws01 & "4").Top = 2680
+        Me.GroupFooter1.Controls("G11_" & ws01 & "5").Top = 2890
+        Me.GroupFooter1.Controls("G11_" & ws01 & "6").Top = 3090
+        
+        Me.GroupFooter1.Controls("G12_" & ws01 & "1").Top = 3670
+        Me.GroupFooter1.Controls("G12_" & ws01 & "2").Top = 3880
+        Me.GroupFooter1.Controls("G12_" & ws01 & "3").Top = 4090
+        Me.GroupFooter1.Controls("G12_" & ws01 & "4").Top = 4300
+        Me.GroupFooter1.Controls("G12_" & ws01 & "5").Top = 4510
+        Me.GroupFooter1.Controls("G12_" & ws01 & "6").Top = 4720
+        '2
+        Me.GroupFooter2.Controls("G20_" & ws01 & "1").Top = 420
+        Me.GroupFooter2.Controls("G20_" & ws01 & "2").Top = 630
+        Me.GroupFooter2.Controls("G20_" & ws01 & "3").Top = 840
+        Me.GroupFooter2.Controls("G20_" & ws01 & "4").Top = 1050
+        Me.GroupFooter2.Controls("G20_" & ws01 & "5").Top = 1260
+        Me.GroupFooter2.Controls("G20_" & ws01 & "6").Top = 1470
+        
+        Me.GroupFooter2.Controls("G21_" & ws01 & "1").Top = 2040
+        Me.GroupFooter2.Controls("G21_" & ws01 & "2").Top = 2250
+        Me.GroupFooter2.Controls("G21_" & ws01 & "3").Top = 2460
+        Me.GroupFooter2.Controls("G21_" & ws01 & "4").Top = 2680
+        Me.GroupFooter2.Controls("G21_" & ws01 & "5").Top = 2890
+        Me.GroupFooter2.Controls("G21_" & ws01 & "6").Top = 3090
+        
+        Me.GroupFooter2.Controls("G22_" & ws01 & "1").Top = 3670
+        Me.GroupFooter2.Controls("G22_" & ws01 & "2").Top = 3880
+        Me.GroupFooter2.Controls("G22_" & ws01 & "3").Top = 4090
+        Me.GroupFooter2.Controls("G22_" & ws01 & "4").Top = 4300
+        Me.GroupFooter2.Controls("G22_" & ws01 & "5").Top = 4510
+        Me.GroupFooter2.Controls("G22_" & ws01 & "6").Top = 4720
+        '3
+        Me.GroupFooter3.Controls("G30_" & ws01 & "1").Top = 420
+        Me.GroupFooter3.Controls("G30_" & ws01 & "2").Top = 630
+        Me.GroupFooter3.Controls("G30_" & ws01 & "3").Top = 840
+        Me.GroupFooter3.Controls("G30_" & ws01 & "4").Top = 1050
+        Me.GroupFooter3.Controls("G30_" & ws01 & "5").Top = 1260
+        Me.GroupFooter3.Controls("G30_" & ws01 & "6").Top = 1470
+        
+        Me.GroupFooter3.Controls("G31_" & ws01 & "1").Top = 2040
+        Me.GroupFooter3.Controls("G31_" & ws01 & "2").Top = 2250
+        Me.GroupFooter3.Controls("G31_" & ws01 & "3").Top = 2460
+        Me.GroupFooter3.Controls("G31_" & ws01 & "4").Top = 2680
+        Me.GroupFooter3.Controls("G31_" & ws01 & "5").Top = 2890
+        Me.GroupFooter3.Controls("G31_" & ws01 & "6").Top = 3090
+        
+        Me.GroupFooter3.Controls("G32_" & ws01 & "1").Top = 3670
+        Me.GroupFooter3.Controls("G32_" & ws01 & "2").Top = 3880
+        Me.GroupFooter3.Controls("G32_" & ws01 & "3").Top = 4090
+        Me.GroupFooter3.Controls("G32_" & ws01 & "4").Top = 4300
+        Me.GroupFooter3.Controls("G32_" & ws01 & "5").Top = 4510
+        Me.GroupFooter3.Controls("G32_" & ws01 & "6").Top = 4720
+        '
+        Me.GroupFooter4.Controls("G40_" & ws01 & "1").Top = 420
+        Me.GroupFooter4.Controls("G40_" & ws01 & "2").Top = 630
+        Me.GroupFooter4.Controls("G40_" & ws01 & "3").Top = 840
+        Me.GroupFooter4.Controls("G40_" & ws01 & "4").Top = 1050
+        Me.GroupFooter4.Controls("G40_" & ws01 & "5").Top = 1260
+        Me.GroupFooter4.Controls("G40_" & ws01 & "6").Top = 1470
+    
+        Me.GroupFooter4.Controls("G41_" & ws01 & "1").Top = 2040
+        Me.GroupFooter4.Controls("G41_" & ws01 & "2").Top = 2250
+        Me.GroupFooter4.Controls("G41_" & ws01 & "3").Top = 2460
+        Me.GroupFooter4.Controls("G41_" & ws01 & "4").Top = 2680
+        Me.GroupFooter4.Controls("G41_" & ws01 & "5").Top = 2890
+        Me.GroupFooter4.Controls("G41_" & ws01 & "6").Top = 3090
+    
+        Me.GroupFooter4.Controls("G42_" & ws01 & "1").Top = 3670
+        Me.GroupFooter4.Controls("G42_" & ws01 & "2").Top = 3880
+        Me.GroupFooter4.Controls("G42_" & ws01 & "3").Top = 4090
+        Me.GroupFooter4.Controls("G42_" & ws01 & "4").Top = 4300
+        Me.GroupFooter4.Controls("G42_" & ws01 & "5").Top = 4510
+        Me.GroupFooter4.Controls("G42_" & ws01 & "6").Top = 4720
+        '
+        Me.ReportFooter.Controls("G90_" & ws01 & "1").Top = 420
+        Me.ReportFooter.Controls("G90_" & ws01 & "2").Top = 630
+        Me.ReportFooter.Controls("G90_" & ws01 & "3").Top = 840
+        Me.ReportFooter.Controls("G90_" & ws01 & "4").Top = 1050
+        Me.ReportFooter.Controls("G90_" & ws01 & "5").Top = 1260
+        Me.ReportFooter.Controls("G90_" & ws01 & "6").Top = 1470
+    
+        Me.ReportFooter.Controls("G91_" & ws01 & "1").Top = 2040
+        Me.ReportFooter.Controls("G91_" & ws01 & "2").Top = 2250
+        Me.ReportFooter.Controls("G91_" & ws01 & "3").Top = 2460
+        Me.ReportFooter.Controls("G91_" & ws01 & "4").Top = 2680
+        Me.ReportFooter.Controls("G91_" & ws01 & "5").Top = 2890
+        Me.ReportFooter.Controls("G91_" & ws01 & "6").Top = 3090
+    
+        Me.ReportFooter.Controls("G92_" & ws01 & "1").Top = 3670
+        Me.ReportFooter.Controls("G92_" & ws01 & "2").Top = 3880
+        Me.ReportFooter.Controls("G92_" & ws01 & "3").Top = 4090
+        Me.ReportFooter.Controls("G92_" & ws01 & "4").Top = 4300
+        Me.ReportFooter.Controls("G92_" & ws01 & "5").Top = 4510
+        Me.ReportFooter.Controls("G92_" & ws01 & "6").Top = 4720
+    Next j
+'
+    '----------------------------------------------------------------
+    '                           ** 見出し **
+    '----------------------------------------------------------------
+    出力日 = Now
+    企業名 = GCoName
+'
+    If GRpt.帳票名 = "借入残高推移表" Then
+        ws01 = "借入残高推移表"
+    ElseIf GRpt.帳票名 = "貸付残高推移表" Then
+        ws01 = "貸付残高推移表"
+    
+    ElseIf GRpt.帳票名 = "借換残高推移表" Then
+        ws01 = "借換残高推移表"
+    End If
+    
+    If GRpt.指定 <> "" Then
+        If G金利SM = True Then
+            L_帳票名.Caption = " " & ws01 & " - 金利SM " & GRpt.指定 & " " & GRpt.推移 & "- "
+        Else
+            L_帳票名.Caption = " " & ws01 & " -" & GRpt.指定 & " " & GRpt.推移 & "- "
+        End If
+    Else
+        If G金利SM = True Then
+            L_帳票名.Caption = " " & ws01 & " - 金利SM " & GRpt.推移 & "- "
+        Else
+            L_帳票名.Caption = " " & ws01 & " -" & GRpt.推移 & "- "
+        End If
+    End If
+'
+    'H00_最終実績年月 = ""
+    'If Gコントロール.最終実績年月 > CDate("2001/01/01") Then
+    '    H00_最終実績年月 = Format(Gコントロール.最終実績年月, Gfmt年月)
+    'End If
+
+    'H00_借入計画番号 = GRpt.借入
+    If GRpt.帳票名 = "借換残高推移表" Then
+    '金融リストラ番号：'借換-'&借換計画番号
+        'GRpt.金融 = "借換-" & GRpt.指定
+    End If
+    H00_金融リストラ番号 = GRpt.金融
+    
+    If GRpt.千円単位 = 1 Then
+        w分母 = 1000
+        L_単位.Caption = "（千円単位）"
+    Else
+        w分母 = 1
+        L_単位 = "（円単位）"
+    End If
+'
+    '----------------------------------------------------------------
+    '                       ** 印字用ファイル作成 **
+    '----------------------------------------------------------------
+    If GRpt.帳票名 = "借換残高推移表" Then
+        wdate = C年月日.平成To西暦("年月日", GRpt.テキスト_02)
+        Call MBD011_借換推移表SMDATA作成(wdate)
+    Else
+        Call MBD020_借入金ワークテーブル作成(wsTbl) 'データ絞り込み
+    End If
+    Call MRB010_標準入力借入残高表("DCIA010_借入金ワーク")       '07/02/18 V180
+    Call MRB010_手入力借入残高表("DCIA010_借入金ワーク")         '07/02/09 V180
+'
+    'w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "平成")
+    '2019/01/15 日付入力区分 仕様変更
+    If G基本情報.日付入力区分 = "0" Then
+    '和暦
+        If Len(GRpt.テキスト_01) <= 2 Then
+            w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "平成")
+        Else
+        w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "西暦")
+        End If
+    Else
+    '西暦
+        w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "西暦")
+    End If
+    
+    w推移表タイトル = MUA010_推移表ファイル作成("", "", w開始年月日, GRpt.推移, wML)
+    
+    Call RDB020_コントロールセット
+'
+    For j = 0 To 1
+        G1_Cnt(j) = 0: G2_Cnt(j) = 0: G3_Cnt(j) = 0: G4_Cnt(j) = 0: GT_Cnt(j) = 0
+        G1_Zan(j) = 0: G2_Zan(j) = 0: G3_Zan(j) = 0: G4_Zan(j) = 0: GT_Zan(j) = 0
+        
+        For k = 0 To wML '列数
+            For l = 0 To 5
+                G1_D(j, k, l) = 0: G2_D(j, k, l) = 0: G3_D(j, k, l) = 0: G4_D(j, k, l) = 0: GT_D(j, k, l) = 0
+            Next l
+        Next k
+    Next j
+'
+    '----------------------------------------------------------------
+    '                          ** 合計 計算 **
+    '----------------------------------------------------------------
+    '----------------------------------------------------------------
+    '                       ** レコード　ソース **
+    '----------------------------------------------------------------
+    '----------------------------------------------------------------
+    '          ** グループ ・ Where ・ OrderＢｙ **
+    '----------------------------------------------------------------
+    If GRpt.S_種別 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_KShubetu"
+    ElseIf GRpt.S_種別 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_KShubetu"
+    ElseIf GRpt.S_種別 = "分類3" Then
+        GroupHeader3.DataField = "GrpFld_KShubetu"
+    ElseIf GRpt.S_種別 = "分類4" Then
+        GroupHeader4.DataField = "GrpFld_KShubetu"
+    End If
+    
+    If GRpt.S_部門 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_Bumon"
+    ElseIf GRpt.S_部門 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_Bumon"
+    ElseIf GRpt.S_部門 = "分類3" Then
+        GroupHeader3.DataField = "GrpFld_Bumon"
+    ElseIf GRpt.S_部門 = "分類4" Then
+        GroupHeader4.DataField = "GrpFld_Bumon"
+    End If
+    
+    If GRpt.S_金融 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_Kinyu"
+    ElseIf GRpt.S_金融 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_Kinyu"
+    ElseIf GRpt.S_金融 = "分類3" Then
+        GroupHeader3.DataField = "GrpFld_Kinyu"
+    ElseIf GRpt.S_金融 = "分類4" Then
+        GroupHeader4.DataField = "GrpFld_Kinyu"
+    End If
+    
+    If GRpt.S_銀行 = "分類1" Then
+        GroupHeader1.DataField = "GrpFld_Ginko"
+    ElseIf GRpt.S_銀行 = "分類2" Then
+        GroupHeader2.DataField = "GrpFld_Ginko"
+    ElseIf GRpt.S_銀行 = "分類3" Then
+        GroupHeader3.DataField = "GrpFld_Ginko"
+    ElseIf GRpt.S_銀行 = "分類4" Then
+        GroupHeader4.DataField = "GrpFld_Ginko"
+    End If
+    
+    If GStr = "金利GR" Then
+        GRet = 金利GR_CHECK
+        If GRet > 1 Then
+            If GRpt.S_金利 = "分類1" Then
+                GroupHeader1.DataField = "GrpFld_KGroup"
+            ElseIf GRpt.S_金利 = "分類2" Then
+                GroupHeader2.DataField = "GrpFld_KGroup"
+            ElseIf GRpt.S_金利 = "分類3" Then
+                GroupHeader3.DataField = "GrpFld_KGroup"
+            ElseIf GRpt.S_金利 = "分類4" Then
+                GroupHeader4.DataField = "GrpFld_KGroup"
+            End If
+        End If
+    End If
+
+    '帳票指示
+    wsS = ""
+    If GRpt.借入金管理区分 = P8.FCDbl(XMXA020_区分("借入金管理区分", "決算用")) Then
+        wsS = wsS & "帳票指示:決算用 "
+    Else
+        wsS = wsS & "帳票指示:管理用 "
+    End If
+    
+    '計名セット、Shapeカラー
+    If GroupHeader1.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "分類1:借入金種別 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_借入金種別名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HFFFFC0
+    ElseIf GroupHeader1.DataField = "GrpFld_Bumon" Then
+        wsS = wsS & "分類1:部門 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_部門名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HC0FFC0
+    ElseIf GroupHeader1.DataField = "GrpFld_Kinyu" Then
+        wsS = wsS & "分類1:金融機関 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_金融機関名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HE0E0E0
+    ElseIf GroupHeader1.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "分類1:銀行 "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_銀行名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HC0FFFF
+    ElseIf GroupHeader1.DataField = "GrpFld_KGroup" Then
+        wsS = wsS & "分類1:金利G "
+        Me.GroupFooter1.Controls("G10_計名").DataField = "I_金利グループ名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = C_LGreen
+    End If
+    
+    If GroupHeader2.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "分類2:借入金種別 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_借入金種別名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HFFFFC0
+    ElseIf GroupHeader2.DataField = "GrpFld_Bumon" Then
+        wsS = wsS & "分類2:部門 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_部門名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HC0FFC0
+    ElseIf GroupHeader2.DataField = "GrpFld_Kinyu" Then
+        wsS = wsS & "分類2:金融機関 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_金融機関名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HE0E0E0
+    ElseIf GroupHeader2.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "分類2:銀行 "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_銀行名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HC0FFFF
+    ElseIf GroupHeader2.DataField = "GrpFld_KGroup" Then
+        wsS = wsS & "分類2:金利G "
+        Me.GroupFooter2.Controls("G20_計名").DataField = "I_金利グループ名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = C_LGreen
+    End If
+    
+    If GroupHeader3.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "分類3:借入金種別 "
+        Me.GroupFooter3.Controls("G30_計名").DataField = "I_借入金種別名"
+        Me.GroupFooter3.Controls("Shape_3").BackColor = &HFFFFC0
+    ElseIf GroupHeader3.DataField = "GrpFld_Bumon" Then
+        wsS = wsS & "分類3:部門 "
+        Me.GroupFooter3.Controls("G30_計名").DataField = "I_部門名"
+        Me.GroupFooter3.Controls("Shape_3").BackColor = &HC0FFC0
+    ElseIf GroupHeader3.DataField = "GrpFld_Kinyu" Then
+        wsS = wsS & "分類3:金融機関 "
+        Me.GroupFooter3.Controls("G30_計名").DataField = "I_金融機関名"
+        Me.GroupFooter3.Controls("Shape_3").BackColor = &HE0E0E0
+    ElseIf GroupHeader3.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "分類3:銀行 "
+        Me.GroupFooter3.Controls("G30_計名").DataField = "I_銀行名"
+        Me.GroupFooter3.Controls("Shape_3").BackColor = &HC0FFFF
+    ElseIf GroupHeader3.DataField = "GrpFld_KGroup" Then
+        wsS = wsS & "分類3:金利G "
+        Me.GroupFooter3.Controls("G30_計名").DataField = "I_金利グループ名"
+        Me.GroupFooter3.Controls("Shape_3").BackColor = C_LGreen
+    End If
+    
+    If GroupHeader4.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "分類4:借入金種別 "
+        Me.GroupFooter4.Controls("G40_計名").DataField = "I_借入金種別名"
+        Me.GroupFooter4.Controls("Shape_4").BackColor = &HFFFFC0
+    ElseIf GroupHeader4.DataField = "GrpFld_Bumon" Then
+        wsS = wsS & "分類4:部門 "
+        Me.GroupFooter4.Controls("G40_計名").DataField = "I_部門名"
+        Me.GroupFooter4.Controls("Shape_4").BackColor = &HC0FFC0
+    ElseIf GroupHeader4.DataField = "GrpFld_Kinyu" Then
+        wsS = wsS & "分類4:金融機関 "
+        Me.GroupFooter4.Controls("G40_計名").DataField = "I_金融機関名"
+        Me.GroupFooter4.Controls("Shape_4").BackColor = &HE0E0E0
+    ElseIf GroupHeader4.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "分類4:銀行 "
+        Me.GroupFooter4.Controls("G40_計名").DataField = "I_銀行名"
+        Me.GroupFooter4.Controls("Shape_4").BackColor = &HC0FFFF
+    ElseIf GroupHeader4.DataField = "GrpFld_KGroup" Then
+        wsS = wsS & "分類4:金利G "
+        Me.GroupFooter4.Controls("G40_計名").DataField = "I_金利グループ名"
+        Me.GroupFooter4.Controls("Shape_4").BackColor = C_LGreen
+    End If
+'
+    GroupFooter1.Visible = True
+    GroupFooter2.Visible = True
+    GroupFooter3.Visible = True
+    GroupFooter4.Visible = True
+    If GroupHeader1.DataField = "" Then
+        GroupFooter1.Visible = False
+    End If
+    If GroupHeader2.DataField = "" Then
+        GroupFooter2.Visible = False
+    End If
+    If GroupHeader3.DataField = "" Then
+        GroupFooter3.Visible = False
+    End If
+    If GroupHeader4.DataField = "" Then
+        GroupFooter4.Visible = False
+    End If
+'
+    '総合計の表示/非表示
+    ReportFooter.Visible = True
+    'If GRpt.指定 <> "" Then
+    '    ReportFooter.Visible = False
+    'End If
+    If GRpt.C_種別 <> "" Then
+        If GRpt.S_種別 = "分類1" Then
+            ReportFooter.Visible = False
+        End If
+        wsS = wsS & "借入金種別名:" & GRpt.C_種別 & " "
+    End If
+    
+    If GRpt.C_部門 <> "" Then
+        If GRpt.S_部門 = "分類1" Then
+            ReportFooter.Visible = False
+        End If
+        wsS = wsS & "部門名:" & GRpt.C_部門 & " "
+    End If
+
+    
+    If GRpt.C_金融 <> "" Then
+        If GRpt.S_金融 = "分類1" Then
+            ReportFooter.Visible = False
+        End If
+        wsS = wsS & "金融機関名:" & GRpt.C_金融 & " "
+    End If
+    
+    If GRpt.C_銀行 <> "" Then
+        If GRpt.S_銀行 = "分類1" Then
+            ReportFooter.Visible = False
+        End If
+        wsS = wsS & "銀行名:" & GRpt.C_銀行 & " "
+    End If
+    
+    '帳票指示
+    Me.PageHeader.Controls("L_帳票指示").Caption = wsS
+    
+    '改ページ
+    Me.GroupFooter1.NewPage = GRpt.NewPage1
+    Me.GroupFooter2.NewPage = GRpt.NewPage2
+    Me.GroupFooter3.NewPage = GRpt.NewPage3
+    Me.GroupFooter4.NewPage = GRpt.NewPage4
+    
+    '印刷設定
+    If GRpt.詳細表示 = 1 Then
+        Me.Detail.Height = 1500
+    Else
+        Me.Detail.Height = 0
+    End If
+'
+    If GRpt.集計 = "集計表示しない" Then
+        Me.GroupFooter1.Height = 1632
+        Me.GroupFooter2.Height = 1632
+        Me.GroupFooter3.Height = 1632
+        Me.GroupFooter4.Height = 1632
+        Me.ReportFooter.Height = 1632
+    End If
+    
+    '銀行指定の時 総合計は表示しない
+    If GRpt.指定 <> "" Then
+        Me.ReportFooter.Visible = False
+    Else
+        Me.ReportFooter.Visible = True
+    End If
+    
+    'w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "平成")
+    '2019/01/15 日付入力区分 仕様変更
+    If G基本情報.日付入力区分 = "0" Then
+    '和暦
+        If Len(GRpt.テキスト_01) <= 2 Then
+            w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "平成")
+        Else
+        w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "西暦")
+        End If
+    Else
+    '西暦
+        w開始年月日 = C年月日.年度開始年月日(GRpt.テキスト_01, "西暦")
+    End If
+    
+    'wWhere = ""
+    'wWhere = wWhere & " Where (1=1) "
+    
+    '----------------------------------------------------------------
+    '                       ** レコード　ソース **
+    '----------------------------------------------------------------
+    
+'借換番号
+'実行日、解約実行日、借換番号
+
+    '** レコード　ソース **
+    wstr = "Select "
+    wstr = wstr & "K.借入番号 As I_借入番号,"
+    
+    'セクションGR
+    wstr = wstr & "K.銀行番号 As GrpFld_Ginko,"
+    wstr = wstr & "G.金融機関番号 As GrpFld_Kinyu,"
+    wstr = wstr & "B.部門番号 As GrpFld_Bumon,"
+    wstr = wstr & " K.借入金種別区分 As GrpFld_KShubetu,"
+    If GStr = "金利GR" Then
+        wstr = wstr & "IIF(K.金利グループ区分<>'',K.金利グループ区分,'99999') As GrpFld_KGroup,"
+    End If
+    
+    wstr = wstr & "G.銀行名 As I_銀行名,"
+    wstr = wstr & "G.金融機関名 As I_金融機関名,"
+    wstr = wstr & "B.部門名 As I_部門名,"
+    wstr = wstr & "S.借入金種別名 As I_借入金種別名,"
+    If GStr <> "金利GR" Then
+        wstr = wstr & "'' As I_金利グループ名,"
+    Else
+        wstr = wstr & "IIF(KG.金利グループ名<>'',KG.金利グループ名,'グループ無') As I_金利グループ名,"
+    End If
+    
+    wstr = wstr & "K.sm区分 As I_SM区分,"
+    wstr = wstr & "K.金融リストラ番号 As I_金融リストラ番号,"
+    wstr = wstr & "Format(K.金融解約実行日,'" & Gfmt年月日 & "') As I_金融解約年月日,"
+    
+    '集計区分
+    If GRpt.集計 = "金利種別計" Then
+    '金利種別
+        wstr = wstr & " IIF(K.金利種別 = " & P8.FCDbl(XMXA020_区分("金利種別", "変動金利")) & ",'変動','固定') As I_集計区分," 'As I_金利種別,"
+    ElseIf GRpt.集計 = "担保区分計" Then
+    '担保区分
+        wstr = wstr & " IIF(K.有担保フラグ = " & P8.FCDbl(XMXA020_区分("有担フラグ", "無担保")) & ",'無担','有担') As I_集計区分," 'As I_担保,"
+    ElseIf GRpt.集計 = "長短区分計" Then
+    '長短区分
+        wstr = wstr & " IIF(K.長短区分 = " & P8.FCDbl(XMXA020_区分("長短区分", "短期借入金")) & ",'短期','長期') AS I_集計区分," 'AS I_長短区分,"
+    Else
+    '集計表示しない
+        wstr = wstr & " '' AS I_集計区分,"
+    End If
+    
+    'wstr = wstr & " IIF(K.金利種別 = " & P8.FCDbl(XMXA020_区分("金利種別", "変動金利")) & ",'変動','固定') As I_金利種別,"
+    'wstr = wstr & " IIF(K.有担保フラグ = " & P8.FCDbl(XMXA020_区分("有担フラグ", "無担保")) & ",'無担','有担') As I_担保,"
+    'wstr = wstr & " IIF(K.長短区分 = " & P8.FCDbl(XMXA020_区分("長短区分", "短期借入金")) & ",'短期','長期') AS I_長短区分,"
+    
+    'wstr = wstr & "K.借入内容 As I_借入内容,"
+    'wstr = wstr & "G.銀行名 As I_銀行名,"
+    
+    
+    'wstr = wstr & "Format(K.解約実行日,'" & Gfmt年月日 & "') As I_解約年月日,"
+    'wstr = wstr & "K.借入計画番号 As I_借入計画番号,"
+    'wstr = wstr & " IIF(K.利息区分 = '" & XMXA020_区分("利息区分", "利息先払") & "','利息先払','利息後払') As I_利息区分名,"
+    
+    For j = 1 To wML
+        w番号 = Right("00" + CStr(j), 2)
+
+        wstr = wstr & "融資_" + w番号 + " As I_" + w番号 + "1,"
+        wstr = wstr & "元金_" + w番号 + " As I_" + w番号 + "2,"
+        wstr = wstr & "利息_" + w番号 + " As I_" + w番号 + "3,"
+        wstr = wstr & "返済_" + w番号 + " As I_" + w番号 + "4,"
+        wstr = wstr & "解約_" + w番号 + " As I_" + w番号 + "5,"
+        wstr = wstr & "残高_" + w番号 + " As I_" + w番号 + "6,"
+    Next
+
+    wstr = wstr & "融資合計 As I_001,"
+    wstr = wstr & "元金合計 As I_002,"
+    wstr = wstr & "利息合計 As I_003,"
+    wstr = wstr & "返済合計 As I_004,"
+    wstr = wstr & "解約合計 As I_005,"
+    wstr = wstr & "残高合計 As I_006"
+        
+    wstr = wstr & " FROM ((((DCDA010_借入残高推移表結果 As Z"
+    wstr = wstr & " INNER JOIN DCIA010_借入金ワーク As K"
+    wstr = wstr & " ON Z.借入番号=K.借入番号)"
+    wstr = wstr & " INNER JOIN DAAA040_銀行マスタ As G"
+    wstr = wstr & " ON K.銀行番号=G.銀行番号)"
+    wstr = wstr & " LEFT JOIN DAAA200_部門マスタ As B"
+    wstr = wstr & " ON K.プロジェクト番号 = B.部門番号)"
+    wstr = wstr & " LEFT JOIN DAAA116_借入金種別 As S"
+    wstr = wstr & " ON K.借入金種別区分 = S.借入金種別区分)"
+'    wstr = wstr & " LEFT JOIN DAAA115_金利シミュレーショングループ As KG"
+'    wstr = wstr & " ON K.金利グループ区分 = KG.金利グループ区分"
+        
+    If GStr = "金利GR" Then
+        wstr = wstr & " LEFT JOIN DAAA115_金利シミュレーショングループ As KG"
+        wstr = wstr & " ON K.金利グループ区分 = KG.金利グループ区分"
+    End If
+    
+        '銀行指定
+    'If GRpt.指定 <> "" Then
+    '    wWhere = wWhere & " And G.銀行名='" & GRpt.指定 & "'"
+    'End If
+    
+    'Order
+'    If GStr <> "金利GR" Then
+'        wWhere = wWhere & " ORDER BY K.借入金種別区分,K.銀行番号,Z.借入番号"
+'        'wWhere = wWhere & " ORDER By K.銀行番号,借入金種別区分,Z.借入番号"
+'    Else
+'        '金利SM
+'        wWhere = wWhere & " ORDER BY IIF(K.金利グループ区分<>'',K.金利グループ区分,'99999'),K.銀行番号,Z.借入番号"
+'    End If
+    
+    'wstr = wstr & wWhere
+    
+    'wOrder
+    wOrder = "": FLG_Order = False
+    For j = 1 To 4
+        If (GRpt.S_金融 = "分類" & CStr(j) Or GRpt.S_銀行 = "分類" & CStr(j)) _
+        And FLG_Order = False Then
+            wOrder = wOrder & "K.銀行番号,"
+            FLG_Order = True
+        ElseIf GRpt.S_種別 = "分類" & CStr(j) Then
+            wOrder = wOrder & "K.借入金種別区分,"
+        ElseIf GRpt.S_部門 = "分類" & CStr(j) Then
+            wOrder = wOrder & "B.部門番号,"
+        ElseIf GRpt.S_金利 = "分類" & CStr(j) Then
+            If GStr <> "金利GR" Then
+                wOrder = wOrder & "K.借入金種別区分,"
+            Else
+            '金利SM
+                wOrder = wOrder & "IIF(K.金利グループ区分<>'',K.金利グループ区分,'99999'),"
+            End If
+        End If
+    Next j
+    wOrder = " Order by " & wOrder & "K.借入番号"
+    wstr = wstr & wOrder
+    
+    Me.DataControl1.Source = wstr
+    
+    FLG_RF = False
+'
+    Exit Sub
+'
+'----------< ERROR ROUTINE >--------------------------------------------------------
+ActiveReport_ReportStart_ERR:
+    pERR_MES = pPROGRAM_ID + "/ ActiveReport_ReportStart() でエラー" + vbCrLf + vbCrLf + _
+                "エラー番号　　：" + CStr(Err.Number) + vbCrLf + _
+                "プロジェクト名：" + Err.Source + vbCrLf + _
+                "エラー内容　　：" + Err.Description + vbCrLf + vbCrLf + _
+                GProduct + "を終了します"
+    pERR_RET = MsgBox(pERR_MES, vbOKOnly + vbCritical, pMSGBOX_TYTLE)
+    pERR_RET = PUT_LOG(pERR_MES)
+    
+    End
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_ReportEnd
+'------------------------------------------------
+Private Sub ActiveReport_ReportEnd()
+'
+    'FBA010_帳票範囲指定.メッセージ = ""
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+'
+    ' =========================================
+    '           　 CsvFile 作成
+    ' =========================================
+    If GRpt.CSV = 1 Then
+        Call MX040_CsvOut_KARISUII(w推移表タイトル)
+    End If
+'
+    ' =========================================
+    '           　 Excel 作成
+    ' =========================================
+'    If GRpt.推移 = "月次" Then
+'        If GRpt.チェック_03 = 1 Then
+'            GRpt.チェック_03 = True
+'        Else
+'            GRpt.チェック_03 = False
+'        End If
+'
+'        If GRpt.チェック_04 = 1 Then
+'            GRpt.チェック_04 = True
+'        Else
+'            GRpt.チェック_04 = False
+'        End If
+'
+'        If GRpt.チェック_03 = True Or GRpt.チェック_04 = True Then
+'            Call MX040_借入残高推移表データ取得(w推移表タイトル, GRpt.チェック_03, GRpt.チェック_04)
+'        End If
+'    End If
+'
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    ' =========================================
+    '  借換たろう！お試し版帳票出力回数チェック
+    ' =========================================
+    If GSys.Sys = "借入金 お試し版" Then
+        Call MAA001_KARIKAETAROU_CNT
+    End If
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_NoData
+'------------------------------------------------
+Private Sub ActiveReport_NoData()
+'
+    'FBA010_帳票範囲指定.メッセージ = "出力すべきデータはありません"
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+    GSstrt帳票Msg = "出力すべきデータはありません"
+'
+    Me.Cancel
+    DoEvents
+'
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_Error
+'------------------------------------------------
+Private Sub ActiveReport_Error(ByVal Number As Integer, ByVal Description As DDActiveReports2.IReturnString, ByVal Scode As Long, ByVal Source As String, ByVal HelpFile As String, ByVal HelpContext As Long, ByVal CancelDisplay As DDActiveReports2.IReturnBool)
+'
+    'FBA010_帳票範囲指定.メッセージ = "出力できませんでした"
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+    GSstrt帳票Msg = "出力できませんでした"
+'
+    Me.Cancel
+    DoEvents
+
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' RDB020_コントロールセット
+'------------------------------------------------
+Private Sub RDB020_コントロールセット()
+    Dim j As Integer
+'
+    For j = 1 To wML
+        w番号 = Right("00" + CStr(j), 2)
+        Me.PageHeader.Controls("Lbl_" + w番号 + "番目年月") = w推移表タイトル.X番目年月(j)
+    Next
+'
+End Sub
+
+'------------------------------------------------
+' Detail_BeforePrint
+'------------------------------------------------
+Private Sub Detail_BeforePrint()
+'
+    Dim j As Integer, k As Integer, wiKubun As Integer
+    Dim wstr As String, wsKubun As String
+    Dim wi_Cnt As Integer
+    Dim wd_D(12, 5) As Double '列数
+    Dim wd_Zan As Double
+    Dim wism As Integer
+'
+    wsKubun = P8.FCStr(Me.Detail.Controls("I_集計区分"))
+    If GRpt.集計 = "金利種別計" Then
+    '金利種別
+        If wsKubun = "変動" Then
+            wiKubun = 0
+        Else
+            wiKubun = 1
+        End If
+    ElseIf GRpt.集計 = "担保区分計" Then
+    '担保区分
+        If wsKubun = "有担" Then
+            wiKubun = 0
+        Else
+            wiKubun = 1
+        End If
+    ElseIf GRpt.集計 = "長短区分計" Then
+    '長短区分
+        If wsKubun = "長期" Then
+            wiKubun = 0
+        Else
+            wiKubun = 1
+        End If
+    End If
+'
+    '期首残高 = 融資残高 + 元金額 + 解約金額
+    wd_Zan = 0
+    If P8.FCDbl(Me.Detail.Controls("I_011")) = 0 Then
+        wd_Zan = P8.FCDbl(Me.Detail.Controls("I_016")) + P8.FCDbl(Me.Detail.Controls("I_012")) + P8.FCDbl(Me.Detail.Controls("I_015"))
+    End If
+    Me.Detail.Controls("I_期首残高") = Format(wd_Zan / w分母, "#,##0")
+    Call MXA030_ReportColor(Me.Detail.Controls("I_期首残高"))
+    '
+    For j = 0 To wML
+        For k = 0 To 5
+            wstr = Right("00" + CStr(j), 2) + CStr(k + 1)
+            
+            wd_D(j, k) = P8.FCDblRD(Me.Detail.Controls("I_" + wstr))
+            Me.Detail.Controls("I_" + wstr) = Format(wd_D(j, k) / w分母, "#,##0")
+            Call MXA030_ReportColor(Me.Detail.Controls("I_" + wstr))
+        Next k
+    Next j
+'
+    'シミュレーション内容
+    wism = P8.FCDbl(Me.Detail.Controls("I_SM区分"))
+    
+    Me.Detail.Controls("I_SM区分") = ""
+    
+    If wism = 1 And P8.FCStr(Me.Detail.Controls("I_金融リストラ番号")) <> "" Then
+        Me.Detail.Controls("I_SM区分") = "借入ｼﾐｭﾚｰｼｮﾝ"
+    ElseIf wism = 0 And P8.FCStr(Me.Detail.Controls("I_金融解約年月日")) <> "" Then
+        Me.Detail.Controls("I_SM区分") = "解約ｼﾐｭﾚｰｼｮﾝ"
+    
+        For j = 0 To wML
+            wstr = Right("00" + CStr(j), 2) + CStr(5)
+            
+            If P8.FCDbl(Me.Detail.Controls("I_" + wstr)) > 0 Then
+                Me.Detail.Controls("I_" + wstr).ForeColor = C_Red
+            End If
+        Next j
+    End If
+'
+    G1_Cnt(wiKubun) = G1_Cnt(wiKubun) + 1
+    G2_Cnt(wiKubun) = G2_Cnt(wiKubun) + 1
+    G3_Cnt(wiKubun) = G3_Cnt(wiKubun) + 1
+    G4_Cnt(wiKubun) = G4_Cnt(wiKubun) + 1
+    GT_Cnt(wiKubun) = GT_Cnt(wiKubun) + 1
+    
+    G1_Zan(wiKubun) = G1_Zan(wiKubun) + wd_Zan
+    G2_Zan(wiKubun) = G2_Zan(wiKubun) + wd_Zan
+    G3_Zan(wiKubun) = G3_Zan(wiKubun) + wd_Zan
+    G4_Zan(wiKubun) = G4_Zan(wiKubun) + wd_Zan
+    GT_Zan(wiKubun) = GT_Zan(wiKubun) + wd_Zan
+    
+    For j = 0 To wML
+        For k = 0 To 5
+            G1_D(wiKubun, j, k) = G1_D(wiKubun, j, k) + wd_D(j, k)
+            G2_D(wiKubun, j, k) = G2_D(wiKubun, j, k) + wd_D(j, k)
+            G3_D(wiKubun, j, k) = G3_D(wiKubun, j, k) + wd_D(j, k)
+            G4_D(wiKubun, j, k) = G4_D(wiKubun, j, k) + wd_D(j, k)
+            GT_D(wiKubun, j, k) = GT_D(wiKubun, j, k) + wd_D(j, k)
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter1_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter1_BeforePrint()
+'
+    Dim j As Integer, k As Integer
+'
+    '計名
+    wstr = Me.GroupFooter1.Controls("G10_計名")
+    Me.GroupFooter1.Controls("G10_計名") = wstr & "　計"
+    
+    If GRpt.集計 = "金利種別計" Then
+    '金利種別
+        Me.GroupFooter1.Controls("G11_計名") = wstr & "　変動金利計"
+        Me.GroupFooter1.Controls("G12_計名") = wstr & "　固定金利計"
+    ElseIf GRpt.集計 = "担保区分計" Then
+    '担保区分
+        Me.GroupFooter1.Controls("G11_計名") = wstr & "　有担保計"
+        Me.GroupFooter1.Controls("G12_計名") = wstr & "　無担保計"
+    ElseIf GRpt.集計 = "長短区分計" Then
+    '長短区分
+        Me.GroupFooter1.Controls("G11_計名") = wstr & "　長期借入金計"
+        Me.GroupFooter1.Controls("G12_計名") = wstr & "　短期借入金計"
+    End If
+'
+    Me.GroupFooter1.Controls("G10_件数") = Format(P8.FCDbl(Me.GroupFooter1.Controls("G10_件数")), "#,##0")
+    
+    Me.GroupFooter1.Controls("G11_件数") = Format(G1_Cnt(0), "#,##0")
+    Me.GroupFooter1.Controls("G12_件数") = Format(G1_Cnt(1), "#,##0")
+    '
+    Me.GroupFooter1.Controls("G10_期首残高") = Format(P8.FCDblRD((G1_Zan(0) + G1_Zan(1)) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_期首残高"))
+    
+    Me.GroupFooter1.Controls("G11_期首残高") = Format(P8.FCDblRD(G1_Zan(0) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G11_期首残高"))
+    
+    Me.GroupFooter1.Controls("G12_期首残高") = Format(P8.FCDblRD(G1_Zan(1) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G12_期首残高"))
+    '
+    For j = 0 To wML
+        For k = 0 To 5
+            wstr = Right("00" + CStr(j), 2) + CStr(k + 1)
+            
+            Me.GroupFooter1.Controls("G10_" + wstr) = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_" + wstr)) / w分母, "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_" + wstr))
+            
+            Me.GroupFooter1.Controls("G11_" + wstr) = Format(P8.FCDblRD(G1_D(0, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter1.Controls("G11_" + wstr))
+            
+            Me.GroupFooter1.Controls("G12_" + wstr) = Format(P8.FCDblRD(G1_D(1, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter1.Controls("G12_" + wstr))
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter1_AfterPrint
+'------------------------------------------------
+Private Sub GroupFooter1_AfterPrint()
+'
+    Dim j As Integer, k As Integer, l As Integer
+'
+    For j = 0 To 1
+        G1_Cnt(j) = 0
+        G1_Zan(j) = 0
+        
+        For k = 0 To wML
+            For l = 0 To 5
+                G1_D(j, k, l) = 0
+            Next l
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter2_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter2_BeforePrint()
+'
+    Dim j As Integer, k As Integer
+'
+    '計名
+    wstr = Me.GroupFooter2.Controls("G20_計名")
+    Me.GroupFooter2.Controls("G20_計名") = wstr & "　計"
+    
+    If GRpt.集計 = "金利種別計" Then
+    '金利種別
+        Me.GroupFooter2.Controls("G21_計名") = wstr & "　変動金利計"
+        Me.GroupFooter2.Controls("G22_計名") = wstr & "　固定金利計"
+    ElseIf GRpt.集計 = "担保区分計" Then
+    '担保区分
+        Me.GroupFooter2.Controls("G21_計名") = wstr & "　有担保計"
+        Me.GroupFooter2.Controls("G22_計名") = wstr & "　無担保計"
+    ElseIf GRpt.集計 = "長短区分計" Then
+    '長短区分
+        Me.GroupFooter2.Controls("G21_計名") = wstr & "　長期借入金計"
+        Me.GroupFooter2.Controls("G22_計名") = wstr & "　短期借入金計"
+    End If
+'
+    Me.GroupFooter2.Controls("G20_件数") = Format(P8.FCDbl(Me.GroupFooter2.Controls("G20_件数")), "#,##0")
+    
+    Me.GroupFooter2.Controls("G21_件数") = Format(G2_Cnt(0), "#,##0")
+    Me.GroupFooter2.Controls("G22_件数") = Format(G2_Cnt(1), "#,##0")
+    '
+    Me.GroupFooter2.Controls("G20_期首残高") = Format(P8.FCDblRD((G2_Zan(0) + G2_Zan(1)) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_期首残高"))
+    
+    Me.GroupFooter2.Controls("G21_期首残高") = Format(P8.FCDblRD(G2_Zan(0) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G21_期首残高"))
+    
+    Me.GroupFooter2.Controls("G22_期首残高") = Format(P8.FCDblRD(G2_Zan(1) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G22_期首残高"))
+    '
+    For j = 0 To wML
+        For k = 0 To 5
+            wstr = Right("00" + CStr(j), 2) + CStr(k + 1)
+            
+            Me.GroupFooter2.Controls("G20_" + wstr) = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_" + wstr)) / w分母, "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_" + wstr))
+            
+            Me.GroupFooter2.Controls("G21_" + wstr) = Format(P8.FCDblRD(G2_D(0, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter2.Controls("G21_" + wstr))
+            
+            Me.GroupFooter2.Controls("G22_" + wstr) = Format(P8.FCDblRD(G2_D(1, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter2.Controls("G22_" + wstr))
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter2_AfterPrint
+'------------------------------------------------
+Private Sub GroupFooter2_AfterPrint()
+'
+    Dim j As Integer, k As Integer, l As Integer
+'
+    For j = 0 To 1
+        G2_Cnt(j) = 0
+        G2_Zan(j) = 0
+        
+        For k = 0 To wML
+            For l = 0 To 5
+                G2_D(j, k, l) = 0
+            Next l
+        Next k
+    Next j
+'
+End Sub
+'------------------------------------------------
+' GroupFooter3_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter3_BeforePrint()
+'
+    Dim j As Integer, k As Integer
+'
+    '計名
+    wstr = Me.GroupFooter3.Controls("G30_計名")
+    Me.GroupFooter3.Controls("G30_計名") = wstr & "　計"
+    
+    If GRpt.集計 = "金利種別計" Then
+    '金利種別
+        Me.GroupFooter3.Controls("G31_計名") = wstr & "　変動金利計"
+        Me.GroupFooter3.Controls("G32_計名") = wstr & "　固定金利計"
+    ElseIf GRpt.集計 = "担保区分計" Then
+    '担保区分
+        Me.GroupFooter3.Controls("G31_計名") = wstr & "　有担保計"
+        Me.GroupFooter3.Controls("G32_計名") = wstr & "　無担保計"
+    ElseIf GRpt.集計 = "長短区分計" Then
+    '長短区分
+        Me.GroupFooter3.Controls("G31_計名") = wstr & "　長期借入金計"
+        Me.GroupFooter3.Controls("G32_計名") = wstr & "　短期借入金計"
+    End If
+'
+    Me.GroupFooter3.Controls("G30_件数") = Format(P8.FCDbl(Me.GroupFooter3.Controls("G30_件数")), "#,##0")
+    
+    Me.GroupFooter3.Controls("G31_件数") = Format(G3_Cnt(0), "#,##0")
+    Me.GroupFooter3.Controls("G32_件数") = Format(G3_Cnt(1), "#,##0")
+    '
+    Me.GroupFooter3.Controls("G30_期首残高") = Format(P8.FCDblRD((G3_Zan(0) + G3_Zan(1)) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter3.Controls("G30_期首残高"))
+    
+    Me.GroupFooter3.Controls("G31_期首残高") = Format(P8.FCDblRD(G3_Zan(0) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter3.Controls("G31_期首残高"))
+    
+    Me.GroupFooter3.Controls("G32_期首残高") = Format(P8.FCDblRD(G3_Zan(1) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter3.Controls("G32_期首残高"))
+    '
+    For j = 0 To wML
+        For k = 0 To 5
+            wstr = Right("00" + CStr(j), 2) + CStr(k + 1)
+            
+            Me.GroupFooter3.Controls("G30_" + wstr) = Format(P8.FCDblRD(Me.GroupFooter3.Controls("G30_" + wstr)) / w分母, "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter3.Controls("G30_" + wstr))
+            
+            Me.GroupFooter3.Controls("G31_" + wstr) = Format(P8.FCDblRD(G3_D(0, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter3.Controls("G31_" + wstr))
+            
+            Me.GroupFooter3.Controls("G32_" + wstr) = Format(P8.FCDblRD(G3_D(1, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter3.Controls("G32_" + wstr))
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter3_AfterPrint
+'------------------------------------------------
+Private Sub GroupFooter3_AfterPrint()
+'
+    Dim j As Integer, k As Integer, l As Integer
+'
+    For j = 0 To 1
+        G3_Cnt(j) = 0
+        G3_Zan(j) = 0
+        
+        For k = 0 To wML
+            For l = 0 To 5
+                G3_D(j, k, l) = 0
+            Next l
+        Next k
+    Next j
+'
+End Sub
+'------------------------------------------------
+' GroupFooter4_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter4_BeforePrint()
+'
+    Dim j As Integer, k As Integer
+'
+    '計名
+    wstr = Me.GroupFooter4.Controls("G40_計名")
+    Me.GroupFooter4.Controls("G40_計名") = wstr & "　計"
+    
+    If GRpt.集計 = "金利種別計" Then
+    '金利種別
+        Me.GroupFooter4.Controls("G41_計名") = wstr & "　変動金利計"
+        Me.GroupFooter4.Controls("G42_計名") = wstr & "　固定金利計"
+    ElseIf GRpt.集計 = "担保区分計" Then
+    '担保区分
+        Me.GroupFooter4.Controls("G41_計名") = wstr & "　有担保計"
+        Me.GroupFooter4.Controls("G42_計名") = wstr & "　無担保計"
+    ElseIf GRpt.集計 = "長短区分計" Then
+    '長短区分
+        Me.GroupFooter4.Controls("G41_計名") = wstr & "　長期借入金計"
+        Me.GroupFooter4.Controls("G42_計名") = wstr & "　短期借入金計"
+    End If
+'
+    Me.GroupFooter4.Controls("G40_件数") = Format(P8.FCDbl(Me.GroupFooter4.Controls("G40_件数")), "#,##0")
+
+    Me.GroupFooter4.Controls("G41_件数") = Format(G4_Cnt(0), "#,##0")
+    Me.GroupFooter4.Controls("G42_件数") = Format(G4_Cnt(1), "#,##0")
+    '
+    Me.GroupFooter4.Controls("G40_期首残高") = Format(P8.FCDblRD((G4_Zan(0) + G4_Zan(1)) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter4.Controls("G40_期首残高"))
+    
+    Me.GroupFooter4.Controls("G41_期首残高") = Format(P8.FCDblRD(G4_Zan(0) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter4.Controls("G41_期首残高"))
+    
+    Me.GroupFooter4.Controls("G42_期首残高") = Format(P8.FCDblRD(G4_Zan(1) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.GroupFooter4.Controls("G42_期首残高"))
+    '
+    For j = 0 To wML
+        For k = 0 To 5
+            wstr = Right("00" + CStr(j), 2) + CStr(k + 1)
+            
+            Me.GroupFooter4.Controls("G40_" + wstr) = Format(P8.FCDblRD(Me.GroupFooter4.Controls("G40_" + wstr)) / w分母, "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter4.Controls("G40_" + wstr))
+            
+            Me.GroupFooter4.Controls("G41_" + wstr) = Format(P8.FCDblRD(G4_D(0, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter4.Controls("G41_" + wstr))
+            
+            Me.GroupFooter4.Controls("G42_" + wstr) = Format(P8.FCDblRD(G4_D(1, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.GroupFooter4.Controls("G42_" + wstr))
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter4_AfterPrint
+'------------------------------------------------
+Private Sub GroupFooter4_AfterPrint()
+'
+    Dim j As Integer, k As Integer, l As Integer
+'
+    For j = 0 To 1
+        G4_Cnt(j) = 0
+        G4_Zan(j) = 0
+        
+        For k = 0 To wML
+            For l = 0 To 5
+                G4_D(j, k, l) = 0
+            Next l
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' ReportFooter_BeforePrint
+'------------------------------------------------
+Private Sub ReportFooter_BeforePrint()
+'
+    Dim j As Integer, k As Integer
+'
+    '計名
+    If GRpt.集計 = "金利種別計" Then
+    '金利種別
+        Me.ReportFooter.Controls("G91_計名") = "変動金利計"
+        Me.ReportFooter.Controls("G92_計名") = "固定金利計"
+    ElseIf GRpt.集計 = "担保区分計" Then
+    '担保区分
+        Me.ReportFooter.Controls("G91_計名") = "有担保計"
+        Me.ReportFooter.Controls("G92_計名") = "無担保計"
+    ElseIf GRpt.集計 = "長短区分計" Then
+    '長短区分
+        Me.ReportFooter.Controls("G91_計名") = "長期借入金計"
+        Me.ReportFooter.Controls("G92_計名") = "短期借入金計"
+    End If
+'
+    Me.ReportFooter.Controls("G90_件数") = Format(P8.FCDbl(Me.ReportFooter.Controls("G90_件数")), "#,##0")
+    
+    Me.ReportFooter.Controls("G91_件数") = Format(GT_Cnt(0), "#,##0")
+    Me.ReportFooter.Controls("G92_件数") = Format(GT_Cnt(1), "#,##0")
+    '
+    Me.ReportFooter.Controls("G90_期首残高") = Format(P8.FCDblRD((GT_Zan(0) + GT_Zan(1)) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_期首残高"))
+    
+    Me.ReportFooter.Controls("G91_期首残高") = Format(P8.FCDblRD(GT_Zan(0) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G91_期首残高"))
+    
+    Me.ReportFooter.Controls("G92_期首残高") = Format(P8.FCDblRD(GT_Zan(1) / w分母), "#,##0")
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G92_期首残高"))
+    '
+    For j = 0 To wML
+        For k = 0 To 5
+            wstr = Right("00" + CStr(j), 2) + CStr(k + 1)
+            
+            Me.ReportFooter.Controls("G90_" + wstr) = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_" + wstr)) / w分母, "#,##0")
+            Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_" + wstr))
+            
+            Me.ReportFooter.Controls("G91_" + wstr) = Format(P8.FCDblRD(GT_D(0, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.ReportFooter.Controls("G91_" + wstr))
+            
+            Me.ReportFooter.Controls("G92_" + wstr) = Format(P8.FCDblRD(GT_D(1, j, k) / w分母), "#,##0")
+            Call MXA030_ReportColor(Me.ReportFooter.Controls("G92_" + wstr))
+        Next k
+    Next j
+'
+End Sub
+
+'------------------------------------------------
+' 金利GR_CHECK
+'------------------------------------------------
+Private Function 金利GR_CHECK() As Integer
+'
+    On Error GoTo 金利GR_CHECK_ERR
+'
+    wstr = "SELECT K.金利グループ区分"
+    wstr = wstr & " FROM (DCDA010_借入残高推移表結果 AS Z"
+    wstr = wstr & " INNER JOIN DCIA010_借入金ワーク AS K ON Z.借入番号 = K.借入番号)"
+    wstr = wstr & " LEFT JOIN DAAA115_金利シミュレーショングループ AS KG"
+    wstr = wstr & " ON K.金利グループ区分 = KG.金利グループ区分"
+    wstr = wstr & " GROUP BY K.金利グループ区分"
+    wstr = wstr & " Having K.金利グループ区分<>''"
+    wstr = wstr & " ORDER BY K.金利グループ区分"
+    Call AdoRecordsetOpen(GDb, wRs, wstr)
+        金利GR_CHECK = wRs.RecordCount
+    wRs.Close
+    Set wRs = Nothing
+'
+    Exit Function
+'
+'----------< ERROR ROUTINE >--------------------------------------------------------
+金利GR_CHECK_ERR:
+    pERR_MES = pPROGRAM_ID + "/ 金利GR_CHECK() でエラー" + vbCrLf + vbCrLf + _
+                "エラー番号　　：" + CStr(Err.Number) + vbCrLf + _
+                "プロジェクト名：" + Err.Source + vbCrLf + _
+                "エラー内容　　：" + Err.Description + vbCrLf + vbCrLf + _
+                GProduct + "を終了します"
+    pERR_RET = MsgBox(pERR_MES, vbOKOnly + vbCritical, pMSGBOX_TYTLE)
+    pERR_RET = PUT_LOG(pERR_MES)
+
+    End
+'
+End Function
+
+
