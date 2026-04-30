@@ -1,0 +1,362 @@
+VERSION 5.00
+Begin {9EB8768B-CDFA-44DF-8F3E-857A8405E1DB} REA020_借入金時価評価適用金利一覧 
+   Caption         =   "借入金時価評価適用金利一覧"
+   ClientHeight    =   14790
+   ClientLeft      =   60
+   ClientTop       =   345
+   ClientWidth     =   18960
+   Icon            =   "REA020_借入金時価評価適用金利一覧.dsx":0000
+   StartUpPosition =   2  '画面の中央
+   WindowState     =   2  '最大化
+   _ExtentX        =   33443
+   _ExtentY        =   26088
+   SectionData     =   "REA020_借入金時価評価適用金利一覧.dsx":0ECA
+End
+Attribute VB_Name = "REA020_借入金時価評価適用金利一覧"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Explicit
+'
+Private Const pPROGRAM_ID As String = "REA020_借入金時価評価適用金利一覧"
+
+Dim wstr As String
+Dim wRs As Recordset
+
+Dim w分母 As Integer
+Dim wfmt年月 As String, wfmt年月日 As String
+'
+'------------------------------------------------
+' ActiveReport_ReportStart
+'------------------------------------------------
+Private Sub ActiveReport_ReportStart()
+'
+    Dim wsTbl As String, wsS As String
+    
+    Dim j As Integer
+    Dim wOrder As String
+    Dim FLG_Order As Boolean
+'
+    On Error GoTo ActiveReport_ReportStart_ERR
+'
+    '----------------------------------------------------------------
+    '                         ** 初期設定 **
+    '----------------------------------------------------------------
+    'Connection
+    Me.DataControl1.Connection = GDb
+   
+    '用紙セット
+    Printer.PaperSize = vbPRPSA4
+    Printer.Orientation = ddOLandscape
+'
+    If G基本情報.日付入力区分 = "0" Then
+        '和暦入力
+        wfmt年月 = "ee.mm"
+        wfmt年月日 = "ee.mm.dd"
+    Else
+        wfmt年月 = "yy/mm"
+        wfmt年月日 = "yy/mm/dd"
+        '西暦入力
+    End If
+'
+    L_帳票名.Caption = " 借入金時価評価適用金利一覧"
+    GCsvName = "借入金時価評価適用金利一覧"
+    wsTbl = "DCDA010_借入金時価評価適用金利"
+    If GRpt.作業 = "前期末" Then
+        L_帳票名.Caption = L_帳票名.Caption & "_前期末"
+        L_帳票名.Caption = L_帳票名.Caption & "（" & Format(G決算日(0), Gfmt年月日) & "現在" & "）"
+        If G基本情報.日付入力区分 = "0" Then
+        '和暦入力
+            GCsvName = GCsvName & "_" & Format(G決算日(0), Gfmt年月日)
+        Else
+        '西暦入力
+            GCsvName = GCsvName & "_" & Format(G決算日(0), "yyyymmdd")
+        End If
+        wsTbl = "DCDA010_借入金時価評価適用金利前期末"
+    Else
+        L_帳票名.Caption = L_帳票名.Caption & "（" & Format(G決算日(1), Gfmt年月日) & "現在" & "）"
+        If G基本情報.日付入力区分 = "0" Then
+        '和暦入力
+            GCsvName = GCsvName & "_" & Format(G決算日(1), Gfmt年月日)
+        Else
+        '西暦入力
+            GCsvName = GCsvName & "_" & Format(G決算日(1), "yyyymmdd")
+        End If
+    End If
+'
+    '----------------------------------------------------------------
+    '                           ** 見出し **
+    '----------------------------------------------------------------
+    出力日 = Now
+    企業名 = GCoName
+        
+    If GRpt.千円単位 = 1 Then
+        w分母 = 1000
+        L_単位.Caption = "（千円単位）"
+    Else
+        w分母 = 1
+        L_単位 = "（円単位）"
+    End If
+'
+'
+    '----------------------------------------------------------------
+    '                       ** 印字用ファイル作成 **
+    '----------------------------------------------------------------
+    '借入金時価評価一覧表 出力データは借入金時価評価一覧表で作成済
+    If GRpt.作業 = "" Then
+        '** 明細ファイル 削除 **
+        wstr = ""
+        wstr = wstr + "Delete * From DCDA010_借入金時価評価適用金利"
+        GDb.Execute wstr
+            
+        For j = 0 To UBound(G基準金利)
+            'GRet = MAA200_時価評価適用金利作成(G決算日(1), G基準金利(j).基準金利区分) DEL 20170501 M.Mino
+            GRet = MAA200_時価評価適用金利作成(G決算日(1), G基準金利(j).基準金利区分, GRpt.コンボ_01) 'ADD 20170501 M.Mino
+            If GRet = True Then
+                Call MAA200_時価評価適用金利
+            End If
+        Next
+    End If
+'
+    '----------------------------------------------------------------
+    '          ** グループ ・ Where ・ OrderＢｙ **
+    '----------------------------------------------------------------
+    GroupHeader1.DataField = "GrpFld_KShubetu"
+    GroupHeader2.DataField = "GrpFld_Ginko"
+
+    '帳票指示
+    wsS = "帳票指示: "
+    
+    '計名セット、Shapeカラー
+    If GroupHeader1.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "分類1:基準金利区分 "
+        Me.GroupFooter1.Controls("G10_基準金利区分").DataField = "I_基準金利区分"
+        Me.GroupFooter1.Controls("G10_基準金利名").DataField = "I_基準金利名"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HFFFFC0
+    End If
+    
+    If GroupHeader2.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "分類2:銀行 "
+        Me.GroupFooter2.Controls("G20_銀行番号").DataField = "I_銀行番号"
+        Me.GroupFooter2.Controls("G20_銀行名").DataField = "I_銀行名"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HC0FFFF
+    End If
+
+    'ADD START 20170501 M.Mino
+    If GRpt.コンボ_01 <> "" Then
+        wsS = wsS & " 金利種別：" & GRpt.コンボ_01
+    End If
+    'ADD END 20170501 M.Mino
+
+    '帳票指示
+    Me.PageHeader.Controls("L_帳票指示").Caption = wsS
+'
+    GroupFooter1.Visible = True
+    GroupFooter2.Visible = True
+    If GroupHeader1.DataField = "" Then
+        GroupFooter1.Visible = False
+    End If
+    If GroupHeader2.DataField = "" Then
+        GroupFooter2.Visible = False
+    End If
+'
+    '改ページ
+    'Me.GroupFooter1.NewPage = GRpt.NewPage1
+    'Me.GroupFooter2.NewPage = GRpt.NewPage2
+'
+    '----------------------------------------------------------------
+    '                       ** レコード　ソース **
+    '----------------------------------------------------------------
+    wstr = ""
+    wstr = wstr & "Select "
+    
+    'セクションGR
+    wstr = wstr & "KZ.銀行番号 As GrpFld_Ginko,"
+    wstr = wstr & " K.基準金利区分 As GrpFld_KShubetu,"
+    
+    wstr = wstr & "G.銀行番号 As I_銀行番号,"
+    wstr = wstr & "G.銀行名 As I_銀行名,"
+    wstr = wstr & " K.基準金利区分 As I_基準金利区分,"
+    wstr = wstr & "S.基準金利名 As I_基準金利名,"
+    
+    wstr = wstr & "Format(KZ.決算年月日,'" & Gfmt年月日 & "') As H00_決算日,"
+    wstr = wstr & "Format(KZ.実行日,'" & wfmt年月日 & "') As I_実行日,"
+    wstr = wstr & "KZ.借入番号 As I_借入番号,"
+    wstr = wstr & "KZ.融資金額 As I_融資金額,"
+    wstr = wstr & "KZ.利率 As I_利率,"
+    wstr = wstr & "Format(KZ.最終返済実行日,'" & wfmt年月日 & "') As I_最終返済年月日,"
+    wstr = wstr & "KZ.決算時融資残高 As I_期末残高,"
+    wstr = wstr & "KZ.借入時長期プライムレート As I_借入時長プラ,"
+    wstr = wstr & "KZ.借入時プレミアム As I_借入時プレミアム,"
+    wstr = wstr & "KZ.決算時長期プライムレート As I_決算時長プラ,"
+    wstr = wstr & "KZ.時価評価適用プレミアム As I_時価評価適用プレミアム,"
+    wstr = wstr & "KZ.決算時時価評価適用金利 As I_決算時時価評価適用金利"
+    
+    wstr = wstr & " From ((" & wsTbl & " As KZ "
+    wstr = wstr & " Inner JOIN DBDA010_借入金 As K"
+    wstr = wstr & " ON KZ.借入番号 = K.借入番号)"
+    wstr = wstr & " Inner JOIN DAAA040_銀行マスタ As G"
+    wstr = wstr & " ON K.銀行番号 = G.銀行番号)"
+    wstr = wstr & " LEFT JOIN DAAA116_基準金利 As S"
+    wstr = wstr & " ON K.基準金利区分 = S.基準金利区分"
+    
+    'wstr = wstr & " Order by K.借入金種別区分,K.銀行番号,K.借入番号"
+    wstr = wstr & " Order by K.基準金利区分,K.銀行番号,K.実行日"
+
+    Me.DataControl1.Source = wstr
+'
+    Exit Sub
+'
+'----------< ERROR ROUTINE >--------------------------------------------------------
+ActiveReport_ReportStart_ERR:
+    pERR_MES = pPROGRAM_ID + "/ ActiveReport_ReportStart() でエラー" + vbCrLf + vbCrLf + _
+                "エラー番号　　：" + CStr(Err.Number) + vbCrLf + _
+                "プロジェクト名：" + Err.Source + vbCrLf + _
+                "エラー内容　　：" + Err.Description + vbCrLf + vbCrLf + _
+                GProduct + "を終了します"
+    pERR_RET = MsgBox(pERR_MES, vbOKOnly + vbCritical, pMSGBOX_TYTLE)
+    pERR_RET = PUT_LOG(pERR_MES)
+
+    End
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_ReportEnd
+'------------------------------------------------
+Private Sub ActiveReport_ReportEnd()
+'
+    'FBA010_帳票範囲指定.メッセージ = ""
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+'
+    ' =========================================
+    '           　 CsvFile 作成
+    ' =========================================
+    If GRpt.CSV = 1 Then
+        Call MX040_CsvOut_KARI
+    End If
+'
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    ' =========================================
+    '  借換たろう！お試し版帳票出力回数チェック
+    ' =========================================
+    If GSys.Sys = "借入金 お試し版" Then
+        Call MAA001_KARIKAETAROU_CNT
+    End If
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_NoData
+'------------------------------------------------
+Private Sub ActiveReport_NoData()
+'
+    'FBA010_帳票範囲指定.メッセージ = "出力すべきデータはありません"
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+    GSstrt帳票Msg = "出力すべきデータはありません"
+'
+    Me.Cancel
+    DoEvents
+'
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_Error
+'------------------------------------------------
+Private Sub ActiveReport_Error(ByVal Number As Integer, ByVal Description As DDActiveReports2.IReturnString, ByVal Scode As Long, ByVal Source As String, ByVal HelpFile As String, ByVal HelpContext As Long, ByVal CancelDisplay As DDActiveReports2.IReturnBool)
+'
+    'FBA010_帳票範囲指定.メッセージ = "出力できませんでした"
+    'FBA010_帳票範囲指定.メッセージ.Refresh
+    GSstrt帳票Msg = "出力できませんでした"
+'
+    Me.Cancel
+    DoEvents
+
+    ' =========================================
+    '           　 ボタン制御
+    ' =========================================
+    'FBA010_帳票範囲指定.実行.Enabled = True
+    'FBA010_帳票範囲指定.閉じる.Enabled = True
+'
+    'FBA010_帳票範囲指定.拡張.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' Detail_BeforePrint
+'------------------------------------------------
+Private Sub Detail_BeforePrint()
+
+    Call MXA030_ReportColor(Me.Detail.Controls("I_融資金額"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_利率"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_期末残高"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_借入時長プラ"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_借入時プレミアム"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_決算時長プラ"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_時価評価適用プレミアム"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_決算時時価評価適用金利"))
+    
+    Me.Detail.Controls("I_融資金額") = Format(P8.FCDblRD(Me.Detail.Controls("I_融資金額")) / w分母, "#,##0")
+    Me.Detail.Controls("I_利率") = Format(P8.FCDblRD5(Me.Detail.Controls("I_利率")), "#,##0.00000")
+    Me.Detail.Controls("I_期末残高") = Format(P8.FCDblRD(Me.Detail.Controls("I_期末残高")) / w分母, "#,##0")
+    Me.Detail.Controls("I_借入時長プラ") = Format(P8.FCDblRD5(Me.Detail.Controls("I_借入時長プラ")), "#,##0.00000")
+    Me.Detail.Controls("I_借入時プレミアム") = Format(P8.FCDblRD5(Me.Detail.Controls("I_借入時プレミアム")), "#,##0.00000")
+    Me.Detail.Controls("I_決算時長プラ") = Format(P8.FCDblRD5(Me.Detail.Controls("I_決算時長プラ")), "#,##0.00000")
+    Me.Detail.Controls("I_時価評価適用プレミアム") = Format(P8.FCDblRD5(Me.Detail.Controls("I_時価評価適用プレミアム")), "#,##0.00000")
+    Me.Detail.Controls("I_決算時時価評価適用金利") = Format(P8.FCDblRD5(Me.Detail.Controls("I_決算時時価評価適用金利")), "#,##0.00000")
+'
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter1_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter1_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_期末残高"))
+    
+    Me.GroupFooter1.Controls("G10_期末残高") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_期末残高")) / w分母, "#,##0")
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter2_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter2_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_期末残高"))
+    
+    Me.GroupFooter2.Controls("G20_期末残高") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_期末残高")) / w分母, "#,##0")
+'
+End Sub
+
+'------------------------------------------------
+' ReportFooter_BeforePrint
+'------------------------------------------------
+Private Sub ReportFooter_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_期末残高"))
+    
+    Me.ReportFooter.Controls("G90_期末残高") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_期末残高")) / w分母, "#,##0")
+'
+End Sub

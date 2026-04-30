@@ -1,0 +1,482 @@
+VERSION 5.00
+Begin {9EB8768B-CDFA-44DF-8F3E-857A8405E1DB} REA030_Ø“ü‹à‰¿•]‰¿ˆê——•\_”äŠr 
+   Caption         =   "Ø“ü‹à‰¿•]‰¿ˆê——•\"
+   ClientHeight    =   7440
+   ClientLeft      =   60
+   ClientTop       =   345
+   ClientWidth     =   12300
+   Icon            =   "REA030_Ø“ü‹à‰¿•]‰¿ˆê——•\_”äŠr.dsx":0000
+   StartUpPosition =   2  '‰æ–Ê‚Ì’†‰›
+   WindowState     =   2  'Å‘å‰»
+   _ExtentX        =   21696
+   _ExtentY        =   13123
+   SectionData     =   "REA030_Ø“ü‹à‰¿•]‰¿ˆê——•\_”äŠr.dsx":0ECA
+End
+Attribute VB_Name = "REA030_Ø“ü‹à‰¿•]‰¿ˆê——•\_”äŠr"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Explicit
+'
+Private Const pPROGRAM_ID As String = "REA030_Ø“ü‹à‰¿•]‰¿ˆê——•\_”äŠr"
+
+Dim wstr As String
+Dim wRs As Recordset
+
+Dim w•ª•ê As Integer
+Dim wRetRpt As Boolean, wRetRpt2 As Boolean
+
+Dim wfmt”NŒ As String, wfmt”NŒ“ú As String
+'
+'------------------------------------------------
+' ActiveReport_ReportStart
+'------------------------------------------------
+Private Sub ActiveReport_ReportStart()
+'
+    Dim wsTbl As String, wsS As String
+    
+    Dim j As Integer
+    Dim wOrder As String
+    Dim FLG_Order As Boolean
+    Dim w‘OŠú––ŒˆZ“ú As Date
+'
+    On Error GoTo ActiveReport_ReportStart_ERR
+'
+    '----------------------------------------------------------------
+    '                         ** ‰Šúİ’è **
+    '----------------------------------------------------------------
+    'Connection
+    Me.DataControl1.Connection = GDb
+   
+    '—p†ƒZƒbƒg
+    Printer.PaperSize = vbPRPSA4
+    Printer.Orientation = ddOLandscape
+'
+    If GŠî–{î•ñ.“ú•t“ü—Í‹æ•ª = "0" Then
+        '˜a—ï“ü—Í
+        wfmt”NŒ = "ee.mm"
+        wfmt”NŒ“ú = "ee.mm.dd"
+    Else
+        wfmt”NŒ = "yy/mm"
+        wfmt”NŒ“ú = "yy/mm/dd"
+        '¼—ï“ü—Í
+    End If
+'
+    L_’ •[–¼.Caption = " Ø“ü‹à‰¿•]‰¿ˆê——•\"
+    GCsvName = "Ø“ü‹à‰¿•]‰¿ˆê——•\"
+    If GRpt.ì‹Æ = "‘OŠú––" Then
+        L_’ •[–¼.Caption = L_’ •[–¼.Caption & "_‘OŠú––"
+        L_’ •[–¼.Caption = L_’ •[–¼.Caption & "i" & Format(GŒˆZ“ú(0), Gfmt”NŒ) & "ŒˆZ" & "j"
+        If GŠî–{î•ñ.“ú•t“ü—Í‹æ•ª = "0" Then
+        '˜a—ï“ü—Í
+            GCsvName = GCsvName & "_" & Format(GŒˆZ“ú(0), Gfmt”NŒ) & "ŒˆZ"
+        Else
+        '¼—ï“ü—Í
+            GCsvName = GCsvName & "_" & Format(GŒˆZ“ú(0), "yyyymm") & "ŒˆZ"
+        End If
+        wsTbl = "DCDA010_Ø“ü‹à‰¿•]‰¿‘OŠú––"
+    ElseIf GRpt.ì‹Æ = "”äŠr" Then
+        L_’ •[–¼.Caption = L_’ •[–¼.Caption & "i‘OŠú––”äŠr‘Œ¸Šzj"
+        If GŠî–{î•ñ.“ú•t“ü—Í‹æ•ª = "0" Then
+        '˜a—ï“ü—Í
+            GCsvName = GCsvName & "_" & Format(GŒˆZ“ú(1), Gfmt”NŒ) & "ŒˆZ‘OŠú––”äŠr"
+        Else
+        '¼—ï“ü—Í
+            GCsvName = GCsvName & "_" & Format(GŒˆZ“ú(1), "yyyymm") & "ŒˆZ‘OŠú––”äŠr"
+        End If
+        wsTbl = "DCDA010_Ø“ü‹à‰¿•]‰¿‘OŠú––”äŠr‘Œ¸"
+    End If
+'
+    '----------------------------------------------------------------
+    '                           ** Œ©o‚µ **
+    '----------------------------------------------------------------
+    o—Í“ú = Now
+    Šé‹Æ–¼ = GCoName
+    
+    If GRpt.ç‰~’PˆÊ = 1 Then
+        w•ª•ê = 1000
+        L_’PˆÊ.Caption = "iç‰~’PˆÊj"
+    Else
+        w•ª•ê = 1
+        L_’PˆÊ = "i‰~’PˆÊj"
+    End If
+    
+    '----------------------------------------------------------------
+    '          ** ƒOƒ‹[ƒv E Where E Order‚a‚™ **
+    '----------------------------------------------------------------
+    'ƒOƒ‹[ƒvƒZƒbƒg
+    GroupHeader1.DataField = "GrpFld_KShubetu"
+    GroupHeader2.DataField = "GrpFld_Ginko"
+    
+    wsS = "’ •[w¦: "
+    'Œv–¼ƒZƒbƒgAShapeƒJƒ‰[
+    If GroupHeader1.DataField = "GrpFld_KShubetu" Then
+        wsS = wsS & "•ª—Ş1:Šî€‹à—˜‹æ•ª "
+        Me.GroupFooter1.Controls("G10_”Ô†").DataField = "I_Šî€‹à—˜‹æ•ª"
+        Me.GroupFooter1.Controls("G10_Œv–¼").DataField = "I_Šî€‹à—˜–¼"
+        Me.GroupFooter1.Controls("Shape_1").BackColor = &HFFFFC0
+    End If
+
+    If GroupHeader2.DataField = "GrpFld_Ginko" Then
+        wsS = wsS & "•ª—Ş2:‹âs "
+        Me.GroupFooter2.Controls("G20_”Ô†").DataField = "I_‹âs”Ô†"
+        Me.GroupFooter2.Controls("G20_Œv–¼").DataField = "I_‹âs–¼"
+        Me.GroupFooter2.Controls("Shape_2").BackColor = &HC0FFFF
+    End If
+
+    'ADD START 20170501 M.Mino
+    If GRpt.ƒRƒ“ƒ{_01 <> "" Then
+        wsS = wsS & " ‹à—˜í•ÊF" & GRpt.ƒRƒ“ƒ{_01
+    End If
+    'ADD END 20170501 M.Mino
+
+    '’ •[w¦
+    Me.PageHeader.Controls("L_’ •[w¦").Caption = wsS
+'
+    GroupFooter1.Visible = True
+    GroupFooter2.Visible = True
+    If GroupHeader1.DataField = "" Then
+        GroupFooter1.Visible = False
+    End If
+    If GroupHeader2.DataField = "" Then
+        GroupFooter2.Visible = False
+    End If
+'
+    '‰üƒy[ƒW
+    'Me.GroupFooter1.NewPage = GRpt.NewPage1
+    'Me.GroupFooter2.NewPage = GRpt.NewPage2
+'
+    '----------------------------------------------------------------
+    '                       ** ˆóš—pƒtƒ@ƒCƒ‹ì¬ **
+    '----------------------------------------------------------------
+'
+    '----------------------------------------------------------------
+    '                       ** ƒŒƒR[ƒh@ƒ\[ƒX **
+    '----------------------------------------------------------------
+    If GRpt.ì‹Æ = "‘OŠú––" Then
+        wstr = "SELECT"
+        
+        'ƒZƒNƒVƒ‡ƒ“GR
+        wstr = wstr + " JZ.‹âs”Ô† As GrpFld_Ginko"
+        wstr = wstr + ",K.Šî€‹à—˜‹æ•ª As GrpFld_KShubetu"
+
+        wstr = wstr + ",Format(JZ.ŒˆZ”NŒ“ú,'" & Gfmt”NŒ“ú & "') AS H00_ŒˆZ“ú"
+        wstr = wstr + ",Format(JZ.ŒˆZ”NŒ“ú,'" & Gfmt”NŒ“ú & "') AS H00_ŒˆZ“ú2"
+        wstr = wstr + ",Format(JZ.ŒˆZ”NŒ“ú,'" & Gfmt”NŒ“ú & "') AS H00_ŒˆZ“ú3"
+        wstr = wstr + ",JZ.Ø“ü”Ô† As I_Ø“ü”Ô†"
+        wstr = wstr + ",JZ.‹âs”Ô† AS I_‹âs”Ô†"
+        wstr = wstr + ",K.Šî€‹à—˜‹æ•ª As I_Šî€‹à—˜‹æ•ª"
+        wstr = wstr + ",S.Šî€‹à—˜–¼ As I_Šî€‹à—˜–¼"
+        wstr = wstr + ",G.‹âs–¼ As I_‹âs–¼"
+        wstr = wstr + ",Format(JZ.Às“ú,'" & wfmt”NŒ“ú & "') AS I_Às“ú"
+        wstr = wstr + ",JZ.—Z‘‹àŠz AS I_—Z‘‹àŠz"
+        wstr = wstr + ",JZ.—˜—¦ AS I_—˜—¦"
+        wstr = wstr + ",Format(JZ.ÅI•ÔÏÀs“ú,'" & wfmt”NŒ“ú & "') AS I_ÅI•ÔÏÀs“ú"
+        wstr = wstr + ",JZ.ŒˆZ”NŒ“ú AS I_ŒˆZ”NŒ“ú"
+        wstr = wstr + ",JZ.‡ŒvŒˆZ—Z‘c‚ AS I_Šú––c‚"
+        wstr = wstr + ",JZ.‡Œv‰¿•]‰¿Šz AS I_‰¿•]‰¿Šz"
+        wstr = wstr + ",JZ.‡Œv‰¿‘¹‰v AS I_‰¿•]‰¿‘¹‰v"
+        wstr = wstr + ",JZ.”NˆÈ“à•ÔÏ—\’èŒ³‹à AS I_’·ŠúØ“ü‹à2"
+        wstr = wstr + ",JZ.”NˆÈ“à•ÔÏ—\’è‰¿•]‰¿Šz AS I_‰¿•]‰¿Šz2"
+        wstr = wstr + ",JZ.”NˆÈ“à•ÔÏ—\’è‰¿‘¹‰v AS I_‰¿•]‰¿‘¹‰v2"
+        wstr = wstr + ",JZ.”N’´•ÔÏ—\’èŒ³‹à AS I_’·ŠúØ“ü‹à3"
+        wstr = wstr + ",JZ.”N’´•ÔÏ—\’è‰¿•]‰¿Šz AS I_‰¿•]‰¿Šz3"
+        wstr = wstr + ",JZ.”N’´•ÔÏ—\’è‰¿‘¹‰v AS I_‰¿•]‰¿‘¹‰v3"
+    
+        wstr = wstr + " FROM ((DCDA010_Ø“ü‹à‰¿•]‰¿‘OŠú–– AS JZ"
+        wstr = wstr + " INNER JOIN DBDA010_Ø“ü‹à As K"
+        wstr = wstr + " ON JZ.Ø“ü”Ô† = K.Ø“ü”Ô†)"
+        wstr = wstr + " LEFT JOIN DAAA116_Šî€‹à—˜ As S"
+        wstr = wstr + " ON K.Šî€‹à—˜‹æ•ª = S.Šî€‹à—˜‹æ•ª)"
+        wstr = wstr + " LEFT JOIN DAAA040_‹âsƒ}ƒXƒ^ As G"
+        wstr = wstr + " ON K.‹âs”Ô† = G.‹âs”Ô†"
+    
+        'wstr = wstr & " Order by K.Ø“ü‹àí•Ê‹æ•ª,K.‹âs”Ô†,K.Ø“ü”Ô†"
+        wstr = wstr & " Order by K.Šî€‹à—˜‹æ•ª,K.‹âs”Ô†,K.Às“ú"
+        
+    ElseIf GRpt.ì‹Æ = "”äŠr" Then
+        wstr = "SELECT"
+        
+        'ƒZƒNƒVƒ‡ƒ“GR
+        wstr = wstr + " First(JZ.‹âs”Ô†) As GrpFld_Ginko"
+        wstr = wstr + ",First(K.Šî€‹à—˜‹æ•ª) As GrpFld_KShubetu"
+
+        wstr = wstr + ",First(Format(JZ.ŒˆZ”NŒ“ú,'" & Gfmt”NŒ“ú & "')) AS H00_ŒˆZ“ú"
+        wstr = wstr + ",First(Format(JZ.ŒˆZ”NŒ“ú,'" & Gfmt”NŒ“ú & "')) AS H00_ŒˆZ“ú2"
+        wstr = wstr + ",First(Format(JZ.ŒˆZ”NŒ“ú,'" & Gfmt”NŒ“ú & "')) AS H00_ŒˆZ“ú3"
+        wstr = wstr + ",JZ.Ø“ü”Ô† As I_Ø“ü”Ô†"
+        wstr = wstr + ",First(JZ.‹âs”Ô†) AS I_‹âs”Ô†"
+        wstr = wstr + ",First(K.Šî€‹à—˜‹æ•ª) As I_Šî€‹à—˜‹æ•ª"
+        wstr = wstr + ",First(S.Šî€‹à—˜–¼) As I_Šî€‹à—˜–¼"
+        wstr = wstr + ",First(G.‹âs–¼) As I_‹âs–¼"
+        wstr = wstr + ",First(Format(JZ.Às“ú,'" & wfmt”NŒ“ú & "')) AS I_Às“ú"
+        wstr = wstr + ",First(JZ.—Z‘‹àŠz) AS I_—Z‘‹àŠz"
+        wstr = wstr + ",First(JZ.—˜—¦) AS I_—˜—¦"
+        wstr = wstr + ",First(Format(JZ.ÅI•ÔÏÀs“ú,'" & wfmt”NŒ“ú & "')) AS I_ÅI•ÔÏÀs“ú"
+        wstr = wstr + ",First(JZ.ŒˆZ”NŒ“ú) AS I_ŒˆZ”NŒ“ú"
+        wstr = wstr + ",Sum(JZ.‡ŒvŒˆZ—Z‘c‚) AS I_Šú––c‚"
+        wstr = wstr + ",Sum(JZ.‡Œv‰¿•]‰¿Šz) AS I_‰¿•]‰¿Šz"
+        wstr = wstr + ",Sum(JZ.‡Œv‰¿‘¹‰v) AS I_‰¿•]‰¿‘¹‰v"
+        wstr = wstr + ",Sum(JZ.”NˆÈ“à•ÔÏ—\’èŒ³‹à) AS I_’·ŠúØ“ü‹à2"
+        wstr = wstr + ",Sum(JZ.”NˆÈ“à•ÔÏ—\’è‰¿•]‰¿Šz) AS I_‰¿•]‰¿Šz2"
+        wstr = wstr + ",Sum(JZ.”NˆÈ“à•ÔÏ—\’è‰¿‘¹‰v) AS I_‰¿•]‰¿‘¹‰v2"
+        wstr = wstr + ",Sum(JZ.”N’´•ÔÏ—\’èŒ³‹à) AS I_’·ŠúØ“ü‹à3"
+        wstr = wstr + ",Sum(JZ.”N’´•ÔÏ—\’è‰¿•]‰¿Šz) AS I_‰¿•]‰¿Šz3"
+        wstr = wstr + ",Sum(JZ.”N’´•ÔÏ—\’è‰¿‘¹‰v) AS I_‰¿•]‰¿‘¹‰v3"
+    
+        wstr = wstr + " FROM ((DCDA010_Ø“ü‹à‰¿•]‰¿‘OŠú––”äŠr‘Œ¸ AS JZ"
+        wstr = wstr + " INNER JOIN DBDA010_Ø“ü‹à As K"
+        wstr = wstr + " ON JZ.Ø“ü”Ô† = K.Ø“ü”Ô†)"
+        wstr = wstr + " LEFT JOIN DAAA116_Šî€‹à—˜ As S"
+        wstr = wstr + " ON K.Šî€‹à—˜‹æ•ª = S.Šî€‹à—˜‹æ•ª)"
+        wstr = wstr + " LEFT JOIN DAAA040_‹âsƒ}ƒXƒ^ As G"
+        wstr = wstr + " ON K.‹âs”Ô† = G.‹âs”Ô†"
+    
+        wstr = wstr + " GROUP BY JZ.Ø“ü”Ô†"
+        'wstr = wstr + " ORDER BY First(K.Ø“ü‹àí•Ê‹æ•ª),First(JZ.‹âs”Ô†),JZ.Ø“ü”Ô†"
+        wstr = wstr + " ORDER BY First(K.Šî€‹à—˜‹æ•ª),First(JZ.‹âs”Ô†),First(JZ.Às“ú)"
+    End If
+'
+    Me.DataControl1.Source = wstr
+'
+    Exit Sub
+'
+'----------< ERROR ROUTINE >--------------------------------------------------------
+ActiveReport_ReportStart_ERR:
+    pERR_MES = pPROGRAM_ID + "/ ActiveReport_ReportStart() ‚ÅƒGƒ‰[" + vbCrLf + vbCrLf + _
+                "ƒGƒ‰[”Ô†@@F" + CStr(Err.Number) + vbCrLf + _
+                "ƒvƒƒWƒFƒNƒg–¼F" + Err.Source + vbCrLf + _
+                "ƒGƒ‰[“à—e@@F" + Err.Description + vbCrLf + vbCrLf + _
+                GProduct + "‚ğI—¹‚µ‚Ü‚·"
+    pERR_RET = MsgBox(pERR_MES, vbOKOnly + vbCritical, pMSGBOX_TYTLE)
+    pERR_RET = PUT_LOG(pERR_MES)
+
+    End
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_ReportEnd
+'------------------------------------------------
+Private Sub ActiveReport_ReportEnd()
+'
+    'FBA010_’ •[”ÍˆÍw’è.ƒƒbƒZ[ƒW = ""
+    'FBA010_’ •[”ÍˆÍw’è.ƒƒbƒZ[ƒW.Refresh
+'
+    ' =========================================
+    '           @ CsvFile ì¬
+    ' =========================================
+    If GRpt.CSV = 1 Then
+        Call MX040_CsvOut_KARI
+    End If
+'
+    ' =========================================
+    '           @ ƒ{ƒ^ƒ“§Œä
+    ' =========================================
+    'FBA010_’ •[”ÍˆÍw’è.Às.Enabled = True
+    'FBA010_’ •[”ÍˆÍw’è.•Â‚¶‚é.Enabled = True
+'
+    'FBA010_’ •[”ÍˆÍw’è.Šg’£.SetFocus
+'
+    ' =========================================
+    '  ØŠ·‚½‚ë‚¤I‚¨‚µ”Å’ •[o—Í‰ñ”ƒ`ƒFƒbƒN
+    ' =========================================
+    If GSys.Sys = "Ø“ü‹à ‚¨‚µ”Å" Then
+        Call MAA001_KARIKAETAROU_CNT
+    End If
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_NoData
+'------------------------------------------------
+Private Sub ActiveReport_NoData()
+'
+    'FBA010_’ •[”ÍˆÍw’è.ƒƒbƒZ[ƒW = "o—Í‚·‚×‚«ƒf[ƒ^‚Í‚ ‚è‚Ü‚¹‚ñ"
+    'FBA010_’ •[”ÍˆÍw’è.ƒƒbƒZ[ƒW.Refresh
+    GSstrt’ •[Msg = "o—Í‚·‚×‚«ƒf[ƒ^‚Í‚ ‚è‚Ü‚¹‚ñ"
+'
+    Me.Cancel
+    DoEvents
+'
+    ' =========================================
+    '           @ ƒ{ƒ^ƒ“§Œä
+    ' =========================================
+    'FBA010_’ •[”ÍˆÍw’è.Às.Enabled = True
+    'FBA010_’ •[”ÍˆÍw’è.•Â‚¶‚é.Enabled = True
+'
+    'FBA010_’ •[”ÍˆÍw’è.Šg’£.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' ActiveReport_Error
+'------------------------------------------------
+Private Sub ActiveReport_Error(ByVal Number As Integer, ByVal Description As DDActiveReports2.IReturnString, ByVal Scode As Long, ByVal Source As String, ByVal HelpFile As String, ByVal HelpContext As Long, ByVal CancelDisplay As DDActiveReports2.IReturnBool)
+'
+    'FBA010_’ •[”ÍˆÍw’è.ƒƒbƒZ[ƒW = "o—Í‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½"
+    'FBA010_’ •[”ÍˆÍw’è.ƒƒbƒZ[ƒW.Refresh
+    GSstrt’ •[Msg = "o—Í‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½"
+'
+    Me.Cancel
+    DoEvents
+
+    ' =========================================
+    '           @ ƒ{ƒ^ƒ“§Œä
+    ' =========================================
+    'FBA010_’ •[”ÍˆÍw’è.Às.Enabled = True
+    'FBA010_’ •[”ÍˆÍw’è.•Â‚¶‚é.Enabled = True
+'
+    'FBA010_’ •[”ÍˆÍw’è.Šg’£.SetFocus
+'
+    Unload Me
+'
+End Sub
+
+'------------------------------------------------
+' Detail_BeforePrint
+'------------------------------------------------
+Private Sub Detail_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.Detail.Controls("I_—Z‘‹àŠz"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_—˜—¦"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_Šú––c‚"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_‰¿•]‰¿Šz"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_’·ŠúØ“ü‹à2"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_‰¿•]‰¿Šz2"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v2"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_’·ŠúØ“ü‹à3"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_‰¿•]‰¿Šz3"))
+    Call MXA030_ReportColor(Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v3"))
+    
+    Me.Detail.Controls("I_—Z‘‹àŠz") = Format(P8.FCDblRD(Me.Detail.Controls("I_—Z‘‹àŠz")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_Šú––c‚") = Format(P8.FCDblRD(Me.Detail.Controls("I_Šú––c‚")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_‰¿•]‰¿Šz") = Format(P8.FCDblRD(Me.Detail.Controls("I_‰¿•]‰¿Šz")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v") = Format(P8.FCDblRD(Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_’·ŠúØ“ü‹à2") = Format(P8.FCDblRD(Me.Detail.Controls("I_’·ŠúØ“ü‹à2")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_‰¿•]‰¿Šz2") = Format(P8.FCDblRD(Me.Detail.Controls("I_‰¿•]‰¿Šz2")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v2") = Format(P8.FCDblRD(Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v2")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_’·ŠúØ“ü‹à3") = Format(P8.FCDblRD(Me.Detail.Controls("I_’·ŠúØ“ü‹à3")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_‰¿•]‰¿Šz3") = Format(P8.FCDblRD(Me.Detail.Controls("I_‰¿•]‰¿Šz3")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v3") = Format(P8.FCDblRD(Me.Detail.Controls("I_‰¿•]‰¿‘¹‰v3")) / w•ª•ê, "#,##0")
+    Me.Detail.Controls("I_—˜—¦") = Format(P8.FCDblRD5(Me.Detail.Controls("I_—˜—¦")), "#,##0.00000")
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter1_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter1_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_Šú––c‚"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_’·ŠúØ“ü‹à2"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz2"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v2"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_’·ŠúØ“ü‹à3"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz3"))
+    Call MXA030_ReportColor(Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v3"))
+
+    Me.GroupFooter1.Controls("G10_Šú––c‚") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_Šú––c‚")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_’·ŠúØ“ü‹à2") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_’·ŠúØ“ü‹à2")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz2") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz2")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v2") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v2")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_’·ŠúØ“ü‹à3") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_’·ŠúØ“ü‹à3")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz3") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_‰¿•]‰¿Šz3")) / w•ª•ê, "#,##0")
+    Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v3") = Format(P8.FCDblRD(Me.GroupFooter1.Controls("G10_‰¿•]‰¿‘¹‰v3")) / w•ª•ê, "#,##0")
+'
+End Sub
+
+'------------------------------------------------
+' GroupFooter2_BeforePrint
+'------------------------------------------------
+Private Sub GroupFooter2_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_Šú––c‚"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_’·ŠúØ“ü‹à2"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz2"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v2"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_’·ŠúØ“ü‹à3"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz3"))
+    Call MXA030_ReportColor(Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v3"))
+
+    Me.GroupFooter2.Controls("G20_Šú––c‚") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_Šú––c‚")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_’·ŠúØ“ü‹à2") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_’·ŠúØ“ü‹à2")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz2") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz2")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v2") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v2")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_’·ŠúØ“ü‹à3") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_’·ŠúØ“ü‹à3")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz3") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_‰¿•]‰¿Šz3")) / w•ª•ê, "#,##0")
+    Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v3") = Format(P8.FCDblRD(Me.GroupFooter2.Controls("G20_‰¿•]‰¿‘¹‰v3")) / w•ª•ê, "#,##0")
+'
+End Sub
+
+'------------------------------------------------
+' GroupHeader1_BeforePrint
+'------------------------------------------------
+Private Sub GroupHeader1_BeforePrint()
+    If GRpt.ì‹Æ = "‘OŠú––" Then
+        Me.GroupHeader1.Controls("H00_ŒˆZ“ú") = Me.GroupHeader1.Controls("H00_ŒˆZ“ú")
+        Me.GroupHeader1.Controls("H00_ŒˆZ“ú2") = Me.GroupHeader1.Controls("H00_ŒˆZ“ú2")
+        Me.GroupHeader1.Controls("H00_ŒˆZ“ú3") = Me.GroupHeader1.Controls("H00_ŒˆZ“ú3")
+    ElseIf GRpt.ì‹Æ = "”äŠr" Then
+        Me.GroupHeader1.Controls("H00_ŒˆZ“ú") = Me.GroupHeader1.Controls("H00_ŒˆZ“ú") + "‘Î”ä‘Œ¸Šz"
+        Me.GroupHeader1.Controls("H00_ŒˆZ“ú2") = Me.GroupHeader1.Controls("H00_ŒˆZ“ú2") + "‘Î”ä‘Œ¸Šz"
+        Me.GroupHeader1.Controls("H00_ŒˆZ“ú3") = Me.GroupHeader1.Controls("H00_ŒˆZ“ú3") + "‘Î”ä‘Œ¸Šz"
+    End If
+End Sub
+
+'------------------------------------------------
+' PageHeader_BeforePrint
+'------------------------------------------------
+'Private Sub PageHeader_BeforePrint()
+''
+'    If GRpt.ì‹Æ = "‘OŠú––" Then
+'        Me.PageHeader.Controls("H00_ŒˆZ“ú") = Me.PageHeader.Controls("H00_ŒˆZ“ú")
+'        Me.PageHeader.Controls("H00_ŒˆZ“ú2") = Me.PageHeader.Controls("H00_ŒˆZ“ú2")
+'        Me.PageHeader.Controls("H00_ŒˆZ“ú3") = Me.PageHeader.Controls("H00_ŒˆZ“ú3")
+'    ElseIf GRpt.ì‹Æ = "”äŠr" Then
+'        Me.PageHeader.Controls("H00_ŒˆZ“ú") = Me.PageHeader.Controls("H00_ŒˆZ“ú") + "‘Î”ä‘Œ¸Šz"
+'        Me.PageHeader.Controls("H00_ŒˆZ“ú2") = Me.PageHeader.Controls("H00_ŒˆZ“ú2") + "‘Î”ä‘Œ¸Šz"
+'        Me.PageHeader.Controls("H00_ŒˆZ“ú3") = Me.PageHeader.Controls("H00_ŒˆZ“ú3") + "‘Î”ä‘Œ¸Šz"
+'    End If
+'End Sub
+
+'------------------------------------------------
+' ReportFooter_BeforePrint
+'------------------------------------------------
+Private Sub ReportFooter_BeforePrint()
+'
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_Šú––c‚"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_’·ŠúØ“ü‹à2"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz2"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v2"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_’·ŠúØ“ü‹à3"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz3"))
+    Call MXA030_ReportColor(Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v3"))
+
+    Me.ReportFooter.Controls("G90_Šú––c‚") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_Šú––c‚")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_’·ŠúØ“ü‹à2") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_’·ŠúØ“ü‹à2")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz2") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz2")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v2") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v2")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_’·ŠúØ“ü‹à3") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_’·ŠúØ“ü‹à3")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz3") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_‰¿•]‰¿Šz3")) / w•ª•ê, "#,##0")
+    Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v3") = Format(P8.FCDblRD(Me.ReportFooter.Controls("G90_‰¿•]‰¿‘¹‰v3")) / w•ª•ê, "#,##0")
+'
+End Sub
+
+
